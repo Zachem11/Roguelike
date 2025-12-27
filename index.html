@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пепел Цивилизации - Постапокалиптический Рогалик</title>
+
+    <!-- PyScript -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #ff6b35;
+            text-shadow: 0 0 20px #ff6b35, 0 0 40px #ff4500;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1400px;
+        }
+
+        #game-container {
+            background: #0a0a0a;
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
+        }
+
+        #game-display {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.1;
+            white-space: pre;
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 800px;
+            min-height: 450px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 300px;
+        }
+
+        .panel {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .panel h2 {
+            color: #ff6b35;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        .stat-bar {
+            margin: 8px 0;
+        }
+
+        .stat-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+
+        .bar {
+            height: 20px;
+            background: #222;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .hp-bar { background: linear-gradient(90deg, #ff0000, #ff4444); }
+        .mana-bar { background: linear-gradient(90deg, #0066ff, #4488ff); }
+        .xp-bar { background: linear-gradient(90deg, #ffaa00, #ffcc00); }
+
+        #log-display {
+            height: 150px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        #log-display p {
+            margin: 2px 0;
+            padding: 2px 5px;
+            border-left: 2px solid #444;
+        }
+
+        #log-display p:last-child {
+            border-left-color: #ff6b35;
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        /* Выбор класса */
+        #class-select {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .class-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .class-card {
+            background: rgba(30, 30, 50, 0.9);
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .class-card:hover {
+            border-color: #ff6b35;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+        }
+
+        .class-card h3 {
+            color: #ff6b35;
+            margin-bottom: 10px;
+        }
+
+        .class-card .symbol {
+            font-size: 48px;
+            margin: 10px 0;
+        }
+
+        .class-card p {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        /* Инвентарь и заклинания */
+        .item-list, .spell-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .item, .spell {
+            padding: 5px;
+            margin: 3px 0;
+            background: rgba(50, 50, 70, 0.5);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .item:hover, .spell:hover {
+            background: rgba(255, 107, 53, 0.3);
+        }
+
+        .equipped {
+            border-left: 3px solid #00ff00;
+        }
+
+        .cooldown {
+            opacity: 0.5;
+        }
+
+        /* Управление */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            gap: 5px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .controls button {
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+
+        .controls button:hover {
+            background: #ff6b35;
+        }
+
+        .controls button:active {
+            transform: scale(0.95);
+        }
+
+        /* Мобильная адаптация */
+        @media (max-width: 900px) {
+            #game-display {
+                font-size: 10px;
+                min-width: auto;
+                width: 100%;
+            }
+
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+        }
+
+        /* Индикатор загрузки */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #333;
+            border-top-color: #ff6b35;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Таргетинг заклинаний */
+        .targeting-mode #game-display {
+            cursor: crosshair;
+        }
+
+        .target-info {
+            color: #ffaa00;
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 170, 0, 0.1);
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        /* Экран смерти */
+        .death-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .death-screen.hidden {
+            display: none;
+        }
+
+        .death-screen h2 {
+            color: #ff0000;
+            font-size: 3em;
+            text-shadow: 0 0 30px #ff0000;
+            margin-bottom: 20px;
+        }
+
+        .death-screen button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background: #ff6b35;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .help-text {
+            color: #666;
+            font-size: 11px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p style="margin-top: 20px;">Загрузка пустоши...</p>
+    </div>
+
+    <div class="death-screen hidden" id="death-screen">
+        <h2>ВЫ ПОГИБЛИ</h2>
+        <p>Пустошь забрала ещё одну жизнь...</p>
+        <p id="death-stats"></p>
+        <button onclick="restartGame()">Начать заново</button>
+    </div>
+
+    <h1>☢ ПЕПЕЛ ЦИВИЛИЗАЦИИ ☢</h1>
+    <p class="subtitle">Постапокалиптический рогалик | 2077 год, после Великой Войны</p>
+
+    <div id="class-select" class="panel">
+        <h2>Выберите класс персонажа</h2>
+        <div class="class-grid">
+            <div class="class-card" onclick="selectClass('PYROMANCER')">
+                <div class="symbol" style="color: #ff4400;">🔥</div>
+                <h3>Пиромант</h3>
+                <p>Повелитель огня. Способен испепелять врагов потоками пламени. Сильный пиромант по мощи равен крематорию!</p>
+            </div>
+            <div class="class-card" onclick="selectClass('STALKER')">
+                <div class="symbol" style="color: #88aa44;">🎯</div>
+                <h3>Сталкер</h3>
+                <p>Выживальщик пустошей. Мастер скрытности и дальнего боя. Знает все тропы Зоны.</p>
+            </div>
+            <div class="class-card" onclick="selectClass('TECHNOPRIEST')">
+                <div class="symbol" style="color: #4488ff;">⚡</div>
+                <h3>Технопріст</h3>
+                <p>Жрец машинного культа. Повелевает электричеством и может взламывать технику.</p>
+            </div>
+            <div class="class-card" onclick="selectClass('PSI_OPERATIVE')">
+                <div class="symbol" style="color: #aa44ff;">🧠</div>
+                <h3>Пси-оперативник</h3>
+                <p>Псионик. Атакует и защищается силой разума. Может контролировать слабых врагов.</p>
+            </div>
+            <div class="class-card" onclick="selectClass('MUTANT')">
+                <div class="symbol" style="color: #44ff44;">☣</div>
+                <h3>Мутант</h3>
+                <p>Мутировавший от радиации. Невероятно живуч и устойчив к радиации. Может регенерировать.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="game-area" style="display: none;">
+        <div id="game-container">
+            <div id="game-display"></div>
+            <div class="controls">
+                <button onclick="handleMove(-1,-1)">↖</button>
+                <button onclick="handleMove(0,-1)">↑</button>
+                <button onclick="handleMove(1,-1)">↗</button>
+                <button onclick="handleMove(-1,0)">←</button>
+                <button onclick="handleWait()">•</button>
+                <button onclick="handleMove(1,0)">→</button>
+                <button onclick="handleMove(-1,1)">↙</button>
+                <button onclick="handleMove(0,1)">↓</button>
+                <button onclick="handleMove(1,1)">↘</button>
+            </div>
+            <p class="help-text">WASD/Стрелки - движение | SPACE - ждать | C - магия | I - инвентарь | G - подобрать | > - спуск</p>
+        </div>
+
+        <div class="sidebar">
+            <div class="panel" id="stats-panel">
+                <h2>Персонаж</h2>
+                <div id="player-stats"></div>
+            </div>
+
+            <div class="panel" id="spells-panel">
+                <h2>Заклинания (C)</h2>
+                <div class="spell-list" id="spell-list"></div>
+                <div class="target-info hidden" id="target-info">
+                    Кликните на карту для выбора цели. ESC - отмена.
+                </div>
+            </div>
+
+            <div class="panel" id="inventory-panel">
+                <h2>Инвентарь (I)</h2>
+                <div class="item-list" id="inventory-list"></div>
+            </div>
+
+            <div class="panel">
+                <h2>Журнал</h2>
+                <div id="log-display"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="py" src="./game.py" config='{"packages": []}' id="game-module"></script>
+
+    <script type="py">
+import js
+from pyscript import document, window
+from game import Game, CharacterClass, MAP_WIDTH, MAP_HEIGHT
+
+# Глобальная переменная игры
+game = Game()
+targeting_mode = False
+selected_spell_index = -1
+
+def render_game():
+    """Отрисовка игры в браузере."""
+    global game
+
+    if game.state == "class_select":
+        return
+
+    if game.state == "dead":
+        death_screen = document.getElementById("death-screen")
+        death_screen.classList.remove("hidden")
+        stats = document.getElementById("death-stats")
+        stats.textContent = f"Уровень: {game.player.level} | Этаж: {game.game_map.depth} | Ходов: {game.turn}"
+        return
+
+    # Рендерим карту
+    display = document.getElementById("game-display")
+    rendered = game.render_map()
+
+    lines = []
+    for row in rendered:
+        line = ""
+        for symbol, color in row:
+            line += f'<span style="color:{color}">{symbol}</span>'
+        lines.append(line)
+
+    display.innerHTML = "<br>".join(lines)
+
+    # Обновляем статистику
+    update_stats()
+    update_spells()
+    update_inventory()
+    update_log()
+
+def update_stats():
+    """Обновление панели статистики."""
+    player = game.player
+    hp_percent = (player.hp / player.max_hp) * 100
+    mana_percent = (player.mana / player.max_mana) * 100 if player.max_mana > 0 else 0
+    xp_needed = player.level * 100
+    xp_percent = (player.xp / xp_needed) * 100
+
+    class_name = player.character_class.value if player.character_class else "Неизвестно"
+
+    html = f'''
+        <p><strong>{class_name}</strong> Ур.{player.level}</p>
+        <p>Этаж: {game.game_map.depth}</p>
+
+        <div class="stat-bar">
+            <div class="stat-label">
+                <span>HP</span>
+                <span>{player.hp}/{player.max_hp}</span>
+            </div>
+            <div class="bar">
+                <div class="bar-fill hp-bar" style="width: {hp_percent}%"></div>
+            </div>
+        </div>
+
+        <div class="stat-bar">
+            <div class="stat-label">
+                <span>Мана</span>
+                <span>{player.mana}/{player.max_mana}</span>
+            </div>
+            <div class="bar">
+                <div class="bar-fill mana-bar" style="width: {mana_percent}%"></div>
+            </div>
+        </div>
+
+        <div class="stat-bar">
+            <div class="stat-label">
+                <span>Опыт</span>
+                <span>{player.xp}/{xp_needed}</span>
+            </div>
+            <div class="bar">
+                <div class="bar-fill xp-bar" style="width: {xp_percent}%"></div>
+            </div>
+        </div>
+
+        <p style="margin-top:10px; font-size:11px;">
+            СИЛ:{player.strength} ЛОВ:{player.agility} ИНТ:{player.intellect} ВЫН:{player.endurance}
+        </p>
+        <p style="font-size:11px;">
+            Броня:{player.armor} Урон:{player.get_attack_damage()}
+        </p>
+    '''
+
+    document.getElementById("player-stats").innerHTML = html
+
+def update_spells():
+    """Обновление списка заклинаний."""
+    spell_list = document.getElementById("spell-list")
+    html = ""
+
+    for i, spell in enumerate(game.player.spells):
+        cooldown_class = "cooldown" if spell.current_cooldown > 0 else ""
+        cooldown_text = f" [{spell.current_cooldown}]" if spell.current_cooldown > 0 else ""
+
+        html += f'''
+            <div class="spell {cooldown_class}" onclick="castSpell({i})">
+                <strong>{spell.name}</strong>{cooldown_text}<br>
+                <small>Мана: {spell.mana_cost} | Урон: {spell.damage} | Дальность: {spell.range}</small>
+            </div>
+        '''
+
+    spell_list.innerHTML = html
+
+def update_inventory():
+    """Обновление инвентаря."""
+    inv_list = document.getElementById("inventory-list")
+    html = ""
+
+    for i, item in enumerate(game.player.inventory):
+        equipped_class = "equipped" if item.equipped else ""
+        html += f'''
+            <div class="item {equipped_class}" onclick="useItem({i})">
+                <span style="color:{item.color}">{item.symbol}</span> {item.name}
+            </div>
+        '''
+
+    if not game.player.inventory:
+        html = "<p style='color:#666'>Пусто</p>"
+
+    inv_list.innerHTML = html
+
+def update_log():
+    """Обновление журнала."""
+    log_display = document.getElementById("log-display")
+    html = ""
+
+    for msg in game.log[-10:]:
+        html += f"<p>{msg}</p>"
+
+    log_display.innerHTML = html
+    log_display.scrollTop = log_display.scrollHeight
+
+# Экспортируемые функции для JavaScript
+def select_class(class_name):
+    """Выбор класса персонажа."""
+    global game
+
+    class_map = {
+        "PYROMANCER": CharacterClass.PYROMANCER,
+        "STALKER": CharacterClass.STALKER,
+        "TECHNOPRIEST": CharacterClass.TECHNOPRIEST,
+        "PSI_OPERATIVE": CharacterClass.PSI_OPERATIVE,
+        "MUTANT": CharacterClass.MUTANT,
+    }
+
+    if class_name in class_map:
+        game.select_class(class_map[class_name])
+        document.getElementById("class-select").style.display = "none"
+        document.getElementById("game-area").style.display = "flex"
+        render_game()
+
+def handle_move(dx, dy):
+    """Обработка движения."""
+    global game, targeting_mode
+
+    if targeting_mode:
+        return
+
+    if game.state == "playing":
+        game.move_player(dx, dy)
+        render_game()
+
+def handle_wait():
+    """Пропуск хода."""
+    if game.state == "playing":
+        game.wait()
+        render_game()
+
+def handle_descend():
+    """Спуск вниз."""
+    if game.state == "playing":
+        game.descend()
+        render_game()
+
+def handle_pickup():
+    """Подобрать предмет."""
+    if game.state == "playing":
+        game.pickup_item()
+        render_game()
+
+def cast_spell(index):
+    """Начать каст заклинания."""
+    global targeting_mode, selected_spell_index
+
+    if index < 0 or index >= len(game.player.spells):
+        return
+
+    spell = game.player.spells[index]
+
+    if spell.current_cooldown > 0:
+        game.add_log(f"{spell.name} перезаряжается!")
+        render_game()
+        return
+
+    if game.player.mana < spell.mana_cost:
+        game.add_log("Недостаточно маны!")
+        render_game()
+        return
+
+    # Если заклинание на себя (range=0) - сразу кастуем
+    if spell.range == 0:
+        game.cast_spell(spell, game.player.x, game.player.y)
+        render_game()
+        return
+
+    # Иначе режим выбора цели
+    targeting_mode = True
+    selected_spell_index = index
+    document.getElementById("target-info").classList.remove("hidden")
+    document.getElementById("game-container").classList.add("targeting-mode")
+    game.add_log(f"Выберите цель для {spell.name}...")
+    render_game()
+
+def cancel_targeting():
+    """Отмена выбора цели."""
+    global targeting_mode, selected_spell_index
+
+    targeting_mode = False
+    selected_spell_index = -1
+    document.getElementById("target-info").classList.add("hidden")
+    document.getElementById("game-container").classList.remove("targeting-mode")
+
+def handle_target(x, y):
+    """Выбор цели для заклинания."""
+    global targeting_mode, selected_spell_index
+
+    if not targeting_mode or selected_spell_index < 0:
+        return
+
+    spell = game.player.spells[selected_spell_index]
+    game.cast_spell(spell, x, y)
+
+    cancel_targeting()
+    render_game()
+
+def use_item(index):
+    """Использование предмета."""
+    if index < 0 or index >= len(game.player.inventory):
+        return
+
+    item = game.player.inventory[index]
+    game.use_item(item)
+    render_game()
+
+def restart_game():
+    """Перезапуск игры."""
+    global game
+    game = Game()
+    document.getElementById("death-screen").classList.add("hidden")
+    document.getElementById("class-select").style.display = "block"
+    document.getElementById("game-area").style.display = "none"
+
+# Обработка клавиатуры
+def on_keydown(event):
+    global targeting_mode
+
+    key = event.key.lower()
+
+    if targeting_mode:
+        if key == "escape":
+            cancel_targeting()
+            return
+        return
+
+    if game.state != "playing":
+        return
+
+    # Движение
+    move_keys = {
+        "w": (0, -1), "arrowup": (0, -1),
+        "s": (0, 1), "arrowdown": (0, 1),
+        "a": (-1, 0), "arrowleft": (-1, 0),
+        "d": (1, 0), "arrowright": (1, 0),
+        "q": (-1, -1), "e": (1, -1),
+        "z": (-1, 1), "x": (1, 1),
+    }
+
+    if key in move_keys:
+        dx, dy = move_keys[key]
+        handle_move(dx, dy)
+        event.preventDefault()
+    elif key == " ":
+        handle_wait()
+        event.preventDefault()
+    elif key == ">":
+        handle_descend()
+    elif key == "g":
+        handle_pickup()
+    elif key == "c":
+        # Показать панель заклинаний (она уже видна)
+        pass
+    elif key == "i":
+        # Показать инвентарь (он уже виден)
+        pass
+
+# Привязываем обработчик клавиш
+js.document.addEventListener("keydown", js.Function.new("event", """
+    if (typeof pyscript !== 'undefined') {
+        pyscript.interpreter.globals.get('on_keydown')(event);
+    }
+"""))
+
+# Скрываем загрузчик
+document.getElementById("loading").classList.add("hidden")
+
+# Экспорт функций в JavaScript
+window.selectClass = select_class
+window.handleMove = handle_move
+window.handleWait = handle_wait
+window.castSpell = cast_spell
+window.useItem = use_item
+window.restartGame = restart_game
+    </script>
+
+    <script>
+        // JavaScript обёртки для PyScript функций
+        function selectClass(className) {
+            if (window.selectClass) {
+                window.selectClass(className);
+            }
+        }
+
+        function handleMove(dx, dy) {
+            if (window.handleMove) {
+                window.handleMove(dx, dy);
+            }
+        }
+
+        function handleWait() {
+            if (window.handleWait) {
+                window.handleWait();
+            }
+        }
+
+        function castSpell(index) {
+            if (window.castSpell) {
+                window.castSpell(index);
+            }
+        }
+
+        function useItem(index) {
+            if (window.useItem) {
+                window.useItem(index);
+            }
+        }
+
+        function restartGame() {
+            if (window.restartGame) {
+                window.restartGame();
+            }
+        }
+    </script>
+</body>
+</html>

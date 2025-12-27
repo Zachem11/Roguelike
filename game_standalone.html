@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пепел Цивилизации - Постапокалиптический Рогалик</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #ff6b35;
+            text-shadow: 0 0 20px #ff6b35, 0 0 40px #ff4500;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            text-align: center;
+        }
+
+        .subtitle { color: #888; margin-bottom: 20px; text-align: center; }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1400px;
+        }
+
+        #game-container {
+            background: #0a0a0a;
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
+        }
+
+        #game-display {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.1;
+            white-space: pre;
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 560px;
+            min-height: 300px;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 300px;
+            max-width: 350px;
+        }
+
+        .panel {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .panel h2 {
+            color: #ff6b35;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        .bar { height: 18px; background: #222; border-radius: 10px; overflow: hidden; margin: 5px 0; }
+        .bar-fill { height: 100%; transition: width 0.3s ease; }
+        .hp-bar { background: linear-gradient(90deg, #ff0000, #ff4444); }
+        .mana-bar { background: linear-gradient(90deg, #0066ff, #4488ff); }
+        .xp-bar { background: linear-gradient(90deg, #ffaa00, #ffcc00); }
+        .stat-label { display: flex; justify-content: space-between; font-size: 12px; }
+
+        #log-display { height: 120px; overflow-y: auto; font-size: 11px; line-height: 1.4; }
+        #log-display p { margin: 2px 0; padding: 2px 5px; border-left: 2px solid #444; }
+        #log-display p:last-child { border-left-color: #ff6b35; background: rgba(255, 107, 53, 0.1); }
+
+        #class-select { text-align: center; padding: 30px; }
+
+        .class-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .class-card {
+            background: rgba(30, 30, 50, 0.9);
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .class-card:hover {
+            border-color: #ff6b35;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+        }
+
+        .class-card h3 { color: #ff6b35; margin-bottom: 8px; font-size: 1em; }
+        .class-card .symbol { font-size: 36px; margin: 8px 0; }
+        .class-card p { font-size: 11px; color: #aaa; }
+
+        .spell, .item {
+            padding: 5px;
+            margin: 3px 0;
+            background: rgba(50, 50, 70, 0.5);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 12px;
+        }
+
+        .spell:hover, .item:hover { background: rgba(255, 107, 53, 0.3); }
+        .equipped { border-left: 3px solid #00ff00; }
+        .cooldown { opacity: 0.5; }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 45px);
+            gap: 5px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .controls button {
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .controls button:hover { background: #ff6b35; }
+        .controls button:active { transform: scale(0.95); }
+
+        .help-text { color: #666; font-size: 10px; margin-top: 8px; text-align: center; }
+
+        .death-screen, .targeting-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .hidden { display: none !important; }
+
+        .death-screen h2 {
+            color: #ff0000;
+            font-size: 2.5em;
+            text-shadow: 0 0 30px #ff0000;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            background: #ff6b35;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .target-info {
+            color: #ffaa00;
+            background: rgba(255, 170, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+            #game-display { font-size: 9px; min-width: auto; }
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <h1>☢ ПЕПЕЛ ЦИВИЛИЗАЦИИ ☢</h1>
+    <p class="subtitle">Постапокалиптический рогалик | 2077 год, после Великой Войны</p>
+
+    <div class="death-screen hidden" id="death-screen">
+        <h2>ВЫ ПОГИБЛИ</h2>
+        <p id="death-stats"></p>
+        <button class="restart-btn" onclick="game.restart()">Начать заново</button>
+    </div>
+
+    <div class="targeting-overlay hidden" id="targeting-overlay">
+        <div class="target-info">
+            <h3 id="targeting-spell-name"></h3>
+            <p>Используйте стрелки для выбора цели</p>
+            <p>ENTER - подтвердить | ESC - отмена</p>
+        </div>
+    </div>
+
+    <div id="class-select" class="panel">
+        <h2>Выберите класс персонажа</h2>
+        <div class="class-grid" id="class-grid"></div>
+    </div>
+
+    <div class="container hidden" id="game-area">
+        <div id="game-container">
+            <div id="game-display"></div>
+            <div class="controls">
+                <button onclick="game.move(-1,-1)">↖</button>
+                <button onclick="game.move(0,-1)">↑</button>
+                <button onclick="game.move(1,-1)">↗</button>
+                <button onclick="game.move(-1,0)">←</button>
+                <button onclick="game.wait()">•</button>
+                <button onclick="game.move(1,0)">→</button>
+                <button onclick="game.move(-1,1)">↙</button>
+                <button onclick="game.move(0,1)">↓</button>
+                <button onclick="game.move(1,1)">↘</button>
+            </div>
+            <p class="help-text">WASD/Стрелки - движение | SPACE - ждать | 1-5 - магия | G - подобрать | > - спуск</p>
+        </div>
+
+        <div class="sidebar">
+            <div class="panel" id="stats-panel">
+                <h2>Персонаж</h2>
+                <div id="player-stats"></div>
+            </div>
+            <div class="panel">
+                <h2>Заклинания (1-5)</h2>
+                <div id="spell-list"></div>
+            </div>
+            <div class="panel">
+                <h2>Инвентарь</h2>
+                <div id="inventory-list"></div>
+            </div>
+            <div class="panel">
+                <h2>Журнал</h2>
+                <div id="log-display"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ==================== КОНСТАНТЫ ====================
+const MAP_WIDTH = 60;
+const MAP_HEIGHT = 25;
+const FOV_RADIUS = 8;
+
+const TILES = {
+    wall: '█', floor: '·', stairs_down: '>', stairs_up: '<',
+    radiation: '☢', rubble: '%', water: '~'
+};
+
+const DAMAGE_TYPES = {
+    PHYSICAL: 'физический', FIRE: 'огонь', RADIATION: 'радиация',
+    ELECTRIC: 'электричество', COLD: 'холод', PSYCHIC: 'пси'
+};
+
+// ==================== КЛАССЫ ====================
+const CHARACTER_CLASSES = {
+    PYROMANCER: {
+        name: 'Пиромант', symbol: '🔥', color: '#ff4400',
+        hp: 80, mana: 100, str: 4, agi: 5, int: 10, end: 5,
+        fireRes: 50, radRes: 0,
+        desc: 'Повелитель огня. Способен испепелять врагов. Сильный пиромант по мощи равен крематорию!',
+        spells: [
+            { name: 'Огненный шар', cost: 15, damage: 25, type: 'FIRE', range: 6, area: 2, cooldown: 0 },
+            { name: 'Поток пламени', cost: 8, damage: 12, type: 'FIRE', range: 4, area: 0, cooldown: 0 },
+            { name: 'Огненная стена', cost: 20, damage: 8, type: 'FIRE', range: 5, area: 3, cooldown: 0 },
+            { name: 'Испепеление', cost: 35, damage: 50, type: 'FIRE', range: 3, area: 0, cooldown: 5 },
+            { name: 'Взрыв сверхновой', cost: 50, damage: 40, type: 'FIRE', range: 0, area: 5, cooldown: 10 }
+        ]
+    },
+    STALKER: {
+        name: 'Сталкер', symbol: '🎯', color: '#88aa44',
+        hp: 100, mana: 40, str: 6, agi: 8, int: 5, end: 7,
+        fireRes: 10, radRes: 30,
+        desc: 'Выживальщик пустошей. Мастер скрытности и дальнего боя.',
+        spells: [
+            { name: 'Меткий выстрел', cost: 5, damage: 15, type: 'PHYSICAL', range: 10, area: 0, cooldown: 0 },
+            { name: 'Уклонение', cost: 10, damage: 0, type: 'PHYSICAL', range: 0, area: 0, cooldown: 3, special: 'dodge' }
+        ]
+    },
+    TECHNOPRIEST: {
+        name: 'Технопріст', symbol: '⚡', color: '#4488ff',
+        hp: 85, mana: 70, str: 4, agi: 5, int: 9, end: 6,
+        fireRes: 20, radRes: 20,
+        desc: 'Жрец машинного культа. Повелевает электричеством и техникой.',
+        spells: [
+            { name: 'Электрошок', cost: 8, damage: 10, type: 'ELECTRIC', range: 5, area: 0, cooldown: 0 },
+            { name: 'Взлом дрона', cost: 15, damage: 0, type: 'PSYCHIC', range: 6, area: 0, cooldown: 5, special: 'hack' },
+            { name: 'EMP-импульс', cost: 25, damage: 15, type: 'ELECTRIC', range: 0, area: 4, cooldown: 4 }
+        ]
+    },
+    PSI_OPERATIVE: {
+        name: 'Пси-оперативник', symbol: '🧠', color: '#aa44ff',
+        hp: 70, mana: 90, str: 3, agi: 6, int: 10, end: 4,
+        fireRes: 0, radRes: 10,
+        desc: 'Псионик. Атакует и защищается силой разума.',
+        spells: [
+            { name: 'Ментальный удар', cost: 10, damage: 12, type: 'PSYCHIC', range: 6, area: 0, cooldown: 0 },
+            { name: 'Контроль разума', cost: 20, damage: 0, type: 'PSYCHIC', range: 5, area: 0, cooldown: 6, special: 'control' },
+            { name: 'Пси-щит', cost: 15, damage: 0, type: 'PSYCHIC', range: 0, area: 0, cooldown: 4, special: 'shield' }
+        ]
+    },
+    MUTANT: {
+        name: 'Мутант', symbol: '☣', color: '#44ff44',
+        hp: 120, mana: 50, str: 9, agi: 4, int: 4, end: 10,
+        fireRes: 20, radRes: 80,
+        desc: 'Мутировавший от радиации. Невероятно живуч.',
+        spells: [
+            { name: 'Регенерация', cost: 10, damage: -25, type: 'RADIATION', range: 0, area: 0, cooldown: 3, special: 'heal' },
+            { name: 'Кислотный плевок', cost: 8, damage: 10, type: 'RADIATION', range: 4, area: 0, cooldown: 0 },
+            { name: 'Радиоактивный взрыв', cost: 20, damage: 18, type: 'RADIATION', range: 0, area: 3, cooldown: 5 }
+        ]
+    }
+};
+
+// ==================== ВРАГИ ====================
+const ENEMY_TEMPLATES = {
+    raider: { name: 'Рейдер', symbol: 'r', color: '#ff4444', hp: 15, str: 4, damage: 3, armor: 0, xp: 15, ai: 'aggressive' },
+    mutant_dog: { name: 'Пёс-мутант', symbol: 'd', color: '#884400', hp: 10, str: 3, damage: 4, armor: 0, xp: 10, ai: 'aggressive', radRes: 50 },
+    ghoul: { name: 'Гуль', symbol: 'g', color: '#00aa00', hp: 20, str: 5, damage: 5, armor: 0, xp: 20, ai: 'aggressive', radRes: 100 },
+    robot: { name: 'Робот-охранник', symbol: 'R', color: '#4444ff', hp: 25, str: 6, damage: 8, armor: 3, xp: 30, ai: 'patrol', fireRes: 30 },
+    pyromancer: { name: 'Дикий пиромант', symbol: 'P', color: '#ff8800', hp: 18, str: 3, damage: 2, armor: 0, xp: 40, ai: 'caster', fireRes: 75,
+        spells: [{ name: 'Огненный шар', cost: 15, damage: 20, type: 'FIRE', range: 5, area: 1 }], mana: 50 },
+    deathclaw: { name: 'Коготь смерти', symbol: 'D', color: '#660000', hp: 50, str: 12, damage: 15, armor: 5, xp: 100, ai: 'aggressive', radRes: 80 }
+};
+
+// ==================== ПРЕДМЕТЫ ====================
+const ITEM_TEMPLATES = [
+    { name: 'Ржавый пистолет', type: 'weapon', symbol: '/', color: '#aaaaaa', damage: 3 },
+    { name: 'Аптечка', type: 'consumable', symbol: '!', color: '#ff0000', heal: 25 },
+    { name: 'Антирад', type: 'consumable', symbol: '!', color: '#00ff00', radHeal: 20 },
+    { name: 'Бронежилет', type: 'armor', symbol: '[', color: '#5555ff', armor: 2 },
+    { name: 'Обрез', type: 'weapon', symbol: '/', color: '#884422', damage: 6 },
+    { name: 'Энергетик', type: 'consumable', symbol: '!', color: '#ffff00', manaRestore: 20 },
+    { name: 'Штурмовая винтовка', type: 'weapon', symbol: '/', color: '#666666', damage: 8 }
+];
+
+// ==================== ИГРА ====================
+class Game {
+    constructor() {
+        this.state = 'class_select';
+        this.map = null;
+        this.player = null;
+        this.entities = [];
+        this.items = [];
+        this.log = [];
+        this.turn = 0;
+        this.depth = 1;
+        this.targeting = false;
+        this.targetX = 0;
+        this.targetY = 0;
+        this.selectedSpell = null;
+
+        this.initClassSelect();
+        this.bindKeys();
+    }
+
+    initClassSelect() {
+        const grid = document.getElementById('class-grid');
+        grid.innerHTML = '';
+        for (const [key, cls] of Object.entries(CHARACTER_CLASSES)) {
+            const card = document.createElement('div');
+            card.className = 'class-card';
+            card.innerHTML = `
+                <div class="symbol" style="color:${cls.color}">${cls.symbol}</div>
+                <h3>${cls.name}</h3>
+                <p>${cls.desc}</p>
+            `;
+            card.onclick = () => this.selectClass(key);
+            grid.appendChild(card);
+        }
+    }
+
+    selectClass(classKey) {
+        const cls = CHARACTER_CLASSES[classKey];
+        this.player = {
+            x: 0, y: 0, symbol: '@', color: '#ffffff', name: 'Выживший',
+            hp: cls.hp, maxHp: cls.hp,
+            mana: cls.mana, maxMana: cls.mana,
+            str: cls.str, agi: cls.agi, int: cls.int, end: cls.end,
+            damage: 2, armor: 0,
+            xp: 0, level: 1,
+            fireRes: cls.fireRes, radRes: cls.radRes,
+            className: cls.name, classKey: classKey,
+            spells: cls.spells.map(s => ({...s, currentCooldown: 0})),
+            inventory: [
+                { name: 'Аптечка', type: 'consumable', symbol: '!', color: '#ff0000', heal: 25 }
+            ],
+            equipped: { weapon: null, armor: null }
+        };
+
+        this.depth = 1;
+        this.generateMap();
+
+        document.getElementById('class-select').classList.add('hidden');
+        document.getElementById('game-area').classList.remove('hidden');
+
+        this.addLog(`Вы - ${cls.name}. Добро пожаловать в пустошь!`);
+        this.addLog('WASD - движение, SPACE - ждать, 1-5 - магия, G - подобрать');
+        this.state = 'playing';
+        this.render();
+    }
+
+    generateMap() {
+        this.map = [];
+        this.entities = [];
+        this.items = [];
+
+        // Инициализация стенами
+        for (let x = 0; x < MAP_WIDTH; x++) {
+            this.map[x] = [];
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                this.map[x][y] = { walkable: false, transparent: false, symbol: TILES.wall, color: '#444', explored: false, visible: false };
+            }
+        }
+
+        // Генерация комнат
+        const rooms = [];
+        for (let i = 0; i < 10 + this.depth * 2; i++) {
+            const w = 4 + Math.floor(Math.random() * 8);
+            const h = 3 + Math.floor(Math.random() * 6);
+            const x = 1 + Math.floor(Math.random() * (MAP_WIDTH - w - 2));
+            const y = 1 + Math.floor(Math.random() * (MAP_HEIGHT - h - 2));
+
+            let overlaps = rooms.some(r =>
+                x <= r.x + r.w + 1 && x + w + 1 >= r.x &&
+                y <= r.y + r.h + 1 && y + h + 1 >= r.y
+            );
+
+            if (!overlaps) {
+                this.carveRoom(x, y, w, h);
+                if (rooms.length > 0) {
+                    const prev = rooms[rooms.length - 1];
+                    this.carveCorridorH(x + Math.floor(w/2), prev.x + Math.floor(prev.w/2), y + Math.floor(h/2));
+                    this.carveCorridorV(prev.x + Math.floor(prev.w/2), y + Math.floor(h/2), prev.y + Math.floor(prev.h/2));
+                }
+                rooms.push({x, y, w, h});
+            }
+        }
+
+        if (rooms.length > 0) {
+            // Размещаем игрока
+            const first = rooms[0];
+            this.player.x = first.x + 1;
+            this.player.y = first.y + 1;
+
+            // Лестница вниз
+            const last = rooms[rooms.length - 1];
+            this.map[last.x + Math.floor(last.w/2)][last.y + Math.floor(last.h/2)] = {
+                walkable: true, transparent: true, symbol: TILES.stairs_down, color: '#ffff00', explored: false, visible: false
+            };
+        }
+
+        // Добавляем радиацию
+        for (const room of rooms) {
+            if (Math.random() < 0.15 + this.depth * 0.03) {
+                const rx = room.x + 1 + Math.floor(Math.random() * (room.w - 2));
+                const ry = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
+                if (this.map[rx][ry].walkable) {
+                    this.map[rx][ry] = { walkable: true, transparent: true, symbol: TILES.radiation, color: '#00ff00', explored: false, visible: false, hazard: 'radiation' };
+                }
+            }
+        }
+
+        // Добавляем предметы
+        for (const room of rooms) {
+            if (Math.random() < 0.4) {
+                const rx = room.x + 1 + Math.floor(Math.random() * (room.w - 2));
+                const ry = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
+                if (this.map[rx][ry].walkable && this.map[rx][ry].symbol === TILES.floor) {
+                    const template = ITEM_TEMPLATES[Math.floor(Math.random() * ITEM_TEMPLATES.length)];
+                    this.items.push({ ...template, x: rx, y: ry, damage: (template.damage || 0) + this.depth });
+                }
+            }
+        }
+
+        // Спавним врагов
+        this.spawnEnemies(rooms);
+        this.computeFOV();
+    }
+
+    carveRoom(x, y, w, h) {
+        for (let rx = x; rx < x + w; rx++) {
+            for (let ry = y; ry < y + h; ry++) {
+                if (rx >= 0 && rx < MAP_WIDTH && ry >= 0 && ry < MAP_HEIGHT) {
+                    const isRubble = Math.random() < 0.03;
+                    this.map[rx][ry] = {
+                        walkable: true, transparent: true,
+                        symbol: isRubble ? TILES.rubble : TILES.floor,
+                        color: isRubble ? '#888' : '#555',
+                        explored: false, visible: false
+                    };
+                }
+            }
+        }
+    }
+
+    carveCorridorH(x1, x2, y) {
+        for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
+            if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT) {
+                this.map[x][y] = { walkable: true, transparent: true, symbol: TILES.floor, color: '#444', explored: false, visible: false };
+            }
+        }
+    }
+
+    carveCorridorV(x, y1, y2) {
+        for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
+            if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT) {
+                this.map[x][y] = { walkable: true, transparent: true, symbol: TILES.floor, color: '#444', explored: false, visible: false };
+            }
+        }
+    }
+
+    spawnEnemies(rooms) {
+        const count = 3 + this.depth * 2;
+        const types = ['raider', 'mutant_dog', 'ghoul', 'robot'];
+        if (this.depth >= 3) types.push('pyromancer');
+        if (this.depth >= 5) types.push('deathclaw');
+
+        for (let i = 0; i < count; i++) {
+            const room = rooms[Math.floor(Math.random() * rooms.length)];
+            const x = room.x + 1 + Math.floor(Math.random() * (room.w - 2));
+            const y = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
+
+            if (this.map[x][y].walkable && !this.getEntityAt(x, y) && (x !== this.player.x || y !== this.player.y)) {
+                const type = types[Math.floor(Math.random() * types.length)];
+                const template = ENEMY_TEMPLATES[type];
+                this.entities.push({
+                    x, y,
+                    symbol: template.symbol,
+                    color: template.color,
+                    name: template.name,
+                    hp: template.hp + this.depth * 3,
+                    maxHp: template.hp + this.depth * 3,
+                    mana: template.mana || 0,
+                    maxMana: template.mana || 0,
+                    str: template.str + this.depth,
+                    damage: template.damage + this.depth,
+                    armor: template.armor + Math.floor(this.depth / 2),
+                    xp: template.xp + this.depth * 5,
+                    ai: template.ai,
+                    fireRes: template.fireRes || 0,
+                    radRes: template.radRes || 0,
+                    spells: template.spells ? template.spells.map(s => ({...s})) : []
+                });
+            }
+        }
+    }
+
+    computeFOV() {
+        // Сбрасываем видимость
+        for (let x = 0; x < MAP_WIDTH; x++) {
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                this.map[x][y].visible = false;
+            }
+        }
+
+        // Raycasting FOV
+        for (let angle = 0; angle < 360; angle += 1) {
+            const rad = angle * Math.PI / 180;
+            const dx = Math.cos(rad);
+            const dy = Math.sin(rad);
+
+            let px = this.player.x + 0.5;
+            let py = this.player.y + 0.5;
+
+            for (let i = 0; i < FOV_RADIUS; i++) {
+                px += dx;
+                py += dy;
+                const tx = Math.floor(px);
+                const ty = Math.floor(py);
+
+                if (tx < 0 || tx >= MAP_WIDTH || ty < 0 || ty >= MAP_HEIGHT) break;
+
+                this.map[tx][ty].visible = true;
+                this.map[tx][ty].explored = true;
+
+                if (!this.map[tx][ty].transparent) break;
+            }
+        }
+    }
+
+    getEntityAt(x, y) {
+        return this.entities.find(e => e.x === x && e.y === y);
+    }
+
+    getItemsAt(x, y) {
+        return this.items.filter(i => i.x === x && i.y === y);
+    }
+
+    addLog(msg) {
+        this.log.push(msg);
+        if (this.log.length > 50) this.log = this.log.slice(-30);
+    }
+
+    move(dx, dy) {
+        if (this.state !== 'playing' || this.targeting) return;
+
+        const newX = this.player.x + dx;
+        const newY = this.player.y + dy;
+
+        if (newX < 0 || newX >= MAP_WIDTH || newY < 0 || newY >= MAP_HEIGHT) return;
+
+        const entity = this.getEntityAt(newX, newY);
+        if (entity) {
+            this.attack(entity);
+            return;
+        }
+
+        if (!this.map[newX][newY].walkable) return;
+
+        this.player.x = newX;
+        this.player.y = newY;
+
+        // Проверяем опасности
+        const tile = this.map[newX][newY];
+        if (tile.hazard === 'radiation') {
+            const dmg = Math.max(1, Math.floor(5 * (100 - this.player.radRes) / 100));
+            this.player.hp -= dmg;
+            this.addLog(`Радиация! Получено ${dmg} урона.`);
+        }
+
+        if (tile.symbol === TILES.stairs_down) {
+            this.addLog('Вы видите спуск вниз. Нажмите > чтобы спуститься.');
+        }
+
+        // Проверяем предметы
+        const items = this.getItemsAt(newX, newY);
+        if (items.length > 0) {
+            this.addLog(`Здесь лежит: ${items.map(i => i.name).join(', ')}`);
+        }
+
+        this.endTurn();
+    }
+
+    attack(target) {
+        let damage = this.player.damage + Math.floor(this.player.str / 2);
+
+        // Оружие
+        if (this.player.equipped.weapon) {
+            damage += this.player.equipped.weapon.damage;
+        }
+
+        // Критический удар
+        if (Math.random() < this.player.agi / 20) {
+            damage = Math.floor(damage * 1.5);
+            this.addLog('Критический удар!');
+        }
+
+        const actual = Math.max(1, damage - target.armor);
+        target.hp -= actual;
+        this.addLog(`Вы атакуете ${target.name}. Урон: ${actual}`);
+
+        if (target.hp <= 0) {
+            this.addLog(`${target.name} повержен!`);
+            this.player.xp += target.xp;
+            this.checkLevelUp();
+            this.entities = this.entities.filter(e => e !== target);
+        }
+
+        this.endTurn();
+    }
+
+    castSpell(index) {
+        if (this.state !== 'playing') return;
+        if (index < 0 || index >= this.player.spells.length) return;
+
+        const spell = this.player.spells[index];
+
+        if (spell.currentCooldown > 0) {
+            this.addLog(`${spell.name} перезаряжается ещё ${spell.currentCooldown} ходов`);
+            return;
+        }
+
+        if (this.player.mana < spell.cost) {
+            this.addLog('Недостаточно маны!');
+            return;
+        }
+
+        // Заклинания на себя
+        if (spell.range === 0) {
+            this.executeCast(spell, this.player.x, this.player.y);
+            return;
+        }
+
+        // Режим выбора цели
+        this.targeting = true;
+        this.selectedSpell = spell;
+        this.targetX = this.player.x;
+        this.targetY = this.player.y;
+
+        document.getElementById('targeting-overlay').classList.remove('hidden');
+        document.getElementById('targeting-spell-name').textContent = spell.name;
+        this.addLog(`Выберите цель для ${spell.name}...`);
+        this.render();
+    }
+
+    executeCast(spell, targetX, targetY) {
+        const dist = Math.sqrt((targetX - this.player.x) ** 2 + (targetY - this.player.y) ** 2);
+
+        if (spell.range > 0 && dist > spell.range) {
+            this.addLog('Цель слишком далеко!');
+            return false;
+        }
+
+        this.player.mana -= spell.cost;
+        spell.currentCooldown = spell.cooldown || 0;
+
+        // Самолечение
+        if (spell.special === 'heal' || spell.damage < 0) {
+            const heal = Math.min(-spell.damage, this.player.maxHp - this.player.hp);
+            this.player.hp += heal;
+            this.addLog(`${spell.name}: восстановлено ${heal} HP`);
+            this.endTurn();
+            return true;
+        }
+
+        // Область поражения
+        if (spell.area > 0) {
+            let hits = 0;
+            for (const entity of [...this.entities]) {
+                const d = Math.sqrt((entity.x - targetX) ** 2 + (entity.y - targetY) ** 2);
+                if (d <= spell.area) {
+                    let dmg = spell.damage;
+                    if (spell.type === 'FIRE') dmg = Math.floor(dmg * (100 - (entity.fireRes || 0)) / 100);
+                    if (spell.type === 'RADIATION') dmg = Math.floor(dmg * (100 - (entity.radRes || 0)) / 100);
+                    entity.hp -= dmg;
+                    this.addLog(`${spell.name} поражает ${entity.name}! Урон: ${dmg}`);
+                    hits++;
+
+                    if (entity.hp <= 0) {
+                        this.addLog(`${entity.name} испепелён!`);
+                        this.player.xp += entity.xp;
+                        this.entities = this.entities.filter(e => e !== entity);
+                    }
+                }
+            }
+            if (hits === 0) this.addLog(`${spell.name} никого не задел.`);
+        } else {
+            // Одиночная цель
+            const target = this.getEntityAt(targetX, targetY);
+            if (target) {
+                let dmg = spell.damage;
+                if (spell.type === 'FIRE') dmg = Math.floor(dmg * (100 - (target.fireRes || 0)) / 100);
+                if (spell.type === 'RADIATION') dmg = Math.floor(dmg * (100 - (target.radRes || 0)) / 100);
+                target.hp -= dmg;
+                this.addLog(`${spell.name} поражает ${target.name}! Урон: ${dmg}`);
+
+                if (target.hp <= 0) {
+                    this.addLog(`${target.name} повержен!`);
+                    this.player.xp += target.xp;
+                    this.checkLevelUp();
+                    this.entities = this.entities.filter(e => e !== target);
+                }
+            } else {
+                this.addLog(`${spell.name} - промах!`);
+            }
+        }
+
+        this.endTurn();
+        return true;
+    }
+
+    confirmTarget() {
+        if (!this.targeting || !this.selectedSpell) return;
+
+        this.targeting = false;
+        document.getElementById('targeting-overlay').classList.add('hidden');
+
+        this.executeCast(this.selectedSpell, this.targetX, this.targetY);
+        this.selectedSpell = null;
+        this.render();
+    }
+
+    cancelTarget() {
+        this.targeting = false;
+        this.selectedSpell = null;
+        document.getElementById('targeting-overlay').classList.add('hidden');
+        this.addLog('Отмена');
+        this.render();
+    }
+
+    moveTarget(dx, dy) {
+        this.targetX = Math.max(0, Math.min(MAP_WIDTH - 1, this.targetX + dx));
+        this.targetY = Math.max(0, Math.min(MAP_HEIGHT - 1, this.targetY + dy));
+        this.render();
+    }
+
+    pickup() {
+        const items = this.getItemsAt(this.player.x, this.player.y);
+        if (items.length === 0) {
+            this.addLog('Здесь ничего нет.');
+            return;
+        }
+
+        const item = items[0];
+        this.player.inventory.push({...item});
+        this.items = this.items.filter(i => !(i.x === this.player.x && i.y === this.player.y && i.name === item.name));
+        this.addLog(`Подобрано: ${item.name}`);
+        this.endTurn();
+    }
+
+    useItem(index) {
+        if (index < 0 || index >= this.player.inventory.length) return;
+
+        const item = this.player.inventory[index];
+
+        if (item.type === 'consumable') {
+            if (item.heal) {
+                const heal = Math.min(item.heal, this.player.maxHp - this.player.hp);
+                this.player.hp += heal;
+                this.addLog(`Использована ${item.name}. Восстановлено ${heal} HP.`);
+            }
+            if (item.manaRestore) {
+                const restore = Math.min(item.manaRestore, this.player.maxMana - this.player.mana);
+                this.player.mana += restore;
+                this.addLog(`Использован ${item.name}. Восстановлено ${restore} маны.`);
+            }
+            this.player.inventory.splice(index, 1);
+            this.endTurn();
+        } else if (item.type === 'weapon') {
+            if (this.player.equipped.weapon === item) {
+                this.player.equipped.weapon = null;
+                item.equipped = false;
+                this.addLog(`${item.name} снято.`);
+            } else {
+                if (this.player.equipped.weapon) this.player.equipped.weapon.equipped = false;
+                this.player.equipped.weapon = item;
+                item.equipped = true;
+                this.addLog(`${item.name} экипировано.`);
+            }
+        } else if (item.type === 'armor') {
+            if (this.player.equipped.armor === item) {
+                this.player.armor -= item.armor;
+                this.player.equipped.armor = null;
+                item.equipped = false;
+                this.addLog(`${item.name} снято.`);
+            } else {
+                if (this.player.equipped.armor) {
+                    this.player.armor -= this.player.equipped.armor.armor;
+                    this.player.equipped.armor.equipped = false;
+                }
+                this.player.equipped.armor = item;
+                this.player.armor += item.armor;
+                item.equipped = true;
+                this.addLog(`${item.name} экипировано.`);
+            }
+        }
+
+        this.render();
+    }
+
+    descend() {
+        const tile = this.map[this.player.x][this.player.y];
+        if (tile.symbol !== TILES.stairs_down) {
+            this.addLog('Здесь нет спуска.');
+            return;
+        }
+
+        this.depth++;
+        this.generateMap();
+        this.addLog(`Вы спустились на уровень ${this.depth}. Враги сильнее...`);
+        this.render();
+    }
+
+    wait() {
+        if (this.state !== 'playing') return;
+        this.addLog('Вы ждёте...');
+        this.endTurn();
+    }
+
+    checkLevelUp() {
+        const needed = this.player.level * 100;
+        while (this.player.xp >= needed) {
+            this.player.xp -= needed;
+            this.player.level++;
+            this.player.maxHp += 10;
+            this.player.hp += 10;
+            this.player.maxMana += 5;
+            this.player.mana += 5;
+            this.player.str++;
+            this.player.int++;
+            this.addLog(`УРОВЕНЬ ${this.player.level}! HP и Мана увеличены!`);
+        }
+    }
+
+    endTurn() {
+        this.turn++;
+
+        // Кулдауны заклинаний
+        for (const spell of this.player.spells) {
+            if (spell.currentCooldown > 0) spell.currentCooldown--;
+        }
+
+        // Регенерация маны
+        if (this.turn % 3 === 0) {
+            this.player.mana = Math.min(this.player.maxMana, this.player.mana + 1);
+        }
+
+        // Ходы врагов
+        for (const entity of [...this.entities]) {
+            this.enemyTurn(entity);
+        }
+
+        // Проверка смерти
+        if (this.player.hp <= 0) {
+            this.state = 'dead';
+            document.getElementById('death-screen').classList.remove('hidden');
+            document.getElementById('death-stats').textContent =
+                `Уровень: ${this.player.level} | Этаж: ${this.depth} | Ходов: ${this.turn}`;
+        }
+
+        this.computeFOV();
+        this.render();
+    }
+
+    enemyTurn(entity) {
+        if (entity.hp <= 0) return;
+
+        const dist = Math.sqrt((entity.x - this.player.x) ** 2 + (entity.y - this.player.y) ** 2);
+
+        // Только если видит игрока
+        if (!this.map[entity.x][entity.y].visible) {
+            if (Math.random() < 0.3) {
+                const dx = [-1, 0, 1][Math.floor(Math.random() * 3)];
+                const dy = [-1, 0, 1][Math.floor(Math.random() * 3)];
+                const nx = entity.x + dx;
+                const ny = entity.y + dy;
+                if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT &&
+                    this.map[nx][ny].walkable && !this.getEntityAt(nx, ny)) {
+                    entity.x = nx;
+                    entity.y = ny;
+                }
+            }
+            return;
+        }
+
+        // Кастеры
+        if (entity.ai === 'caster' && entity.spells && entity.spells.length > 0 && entity.mana >= entity.spells[0].cost) {
+            const spell = entity.spells[0];
+            if (dist <= spell.range) {
+                entity.mana -= spell.cost;
+                let dmg = spell.damage;
+                if (spell.type === 'FIRE') dmg = Math.floor(dmg * (100 - this.player.fireRes) / 100);
+                this.player.hp -= dmg;
+                this.addLog(`${entity.name} использует ${spell.name}! Урон: ${dmg}`);
+                return;
+            }
+        }
+
+        // Ближний бой или движение
+        if (dist <= 1.5) {
+            const dmg = Math.max(1, entity.damage + Math.floor(entity.str / 2) - this.player.armor);
+            this.player.hp -= dmg;
+            this.addLog(`${entity.name} атакует! Урон: ${dmg}`);
+        } else if (entity.ai === 'aggressive' || entity.ai === 'caster') {
+            const dx = this.player.x > entity.x ? 1 : (this.player.x < entity.x ? -1 : 0);
+            const dy = this.player.y > entity.y ? 1 : (this.player.y < entity.y ? -1 : 0);
+
+            const nx = entity.x + dx;
+            const ny = entity.y + dy;
+
+            if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT &&
+                this.map[nx][ny].walkable && !this.getEntityAt(nx, ny) &&
+                !(nx === this.player.x && ny === this.player.y)) {
+                entity.x = nx;
+                entity.y = ny;
+            }
+        }
+    }
+
+    render() {
+        // Карта
+        const display = document.getElementById('game-display');
+        let html = '';
+
+        for (let y = 0; y < MAP_HEIGHT; y++) {
+            for (let x = 0; x < MAP_WIDTH; x++) {
+                const tile = this.map[x][y];
+
+                // Курсор при таргетинге
+                if (this.targeting && x === this.targetX && y === this.targetY) {
+                    html += `<span style="color:#ffff00;background:#444">X</span>`;
+                    continue;
+                }
+
+                if (x === this.player.x && y === this.player.y) {
+                    html += `<span style="color:${this.player.color}">@</span>`;
+                } else if (tile.visible) {
+                    const entity = this.getEntityAt(x, y);
+                    if (entity) {
+                        html += `<span style="color:${entity.color}">${entity.symbol}</span>`;
+                    } else {
+                        const items = this.getItemsAt(x, y);
+                        if (items.length > 0) {
+                            html += `<span style="color:${items[0].color}">${items[0].symbol}</span>`;
+                        } else {
+                            html += `<span style="color:${tile.color}">${tile.symbol}</span>`;
+                        }
+                    }
+                } else if (tile.explored) {
+                    html += `<span style="color:#222">${tile.symbol}</span>`;
+                } else {
+                    html += ' ';
+                }
+            }
+            html += '\n';
+        }
+
+        display.innerHTML = html;
+
+        // Статистика
+        const hpPct = (this.player.hp / this.player.maxHp) * 100;
+        const manaPct = (this.player.mana / this.player.maxMana) * 100;
+        const xpNeeded = this.player.level * 100;
+        const xpPct = (this.player.xp / xpNeeded) * 100;
+
+        let weaponDmg = this.player.damage + Math.floor(this.player.str / 2);
+        if (this.player.equipped.weapon) weaponDmg += this.player.equipped.weapon.damage;
+
+        document.getElementById('player-stats').innerHTML = `
+            <p><strong>${this.player.className}</strong> Ур.${this.player.level}</p>
+            <p>Этаж: ${this.depth}</p>
+            <div class="stat-label"><span>HP</span><span>${this.player.hp}/${this.player.maxHp}</span></div>
+            <div class="bar"><div class="bar-fill hp-bar" style="width:${hpPct}%"></div></div>
+            <div class="stat-label"><span>Мана</span><span>${this.player.mana}/${this.player.maxMana}</span></div>
+            <div class="bar"><div class="bar-fill mana-bar" style="width:${manaPct}%"></div></div>
+            <div class="stat-label"><span>Опыт</span><span>${this.player.xp}/${xpNeeded}</span></div>
+            <div class="bar"><div class="bar-fill xp-bar" style="width:${xpPct}%"></div></div>
+            <p style="margin-top:8px;font-size:11px">СИЛ:${this.player.str} ЛОВ:${this.player.agi} ИНТ:${this.player.int} ВЫН:${this.player.end}</p>
+            <p style="font-size:11px">Броня:${this.player.armor} Урон:${weaponDmg}</p>
+        `;
+
+        // Заклинания
+        let spellHtml = '';
+        this.player.spells.forEach((spell, i) => {
+            const cd = spell.currentCooldown > 0 ? ` [${spell.currentCooldown}]` : '';
+            const cdClass = spell.currentCooldown > 0 ? 'cooldown' : '';
+            spellHtml += `<div class="spell ${cdClass}" onclick="game.castSpell(${i})">
+                <strong>${i+1}. ${spell.name}</strong>${cd}<br>
+                <small>Мана:${spell.cost} Урон:${spell.damage} Дальн:${spell.range}</small>
+            </div>`;
+        });
+        document.getElementById('spell-list').innerHTML = spellHtml || '<p style="color:#666">Нет заклинаний</p>';
+
+        // Инвентарь
+        let invHtml = '';
+        this.player.inventory.forEach((item, i) => {
+            const eqClass = item.equipped ? 'equipped' : '';
+            invHtml += `<div class="item ${eqClass}" onclick="game.useItem(${i})">
+                <span style="color:${item.color}">${item.symbol}</span> ${item.name}
+            </div>`;
+        });
+        document.getElementById('inventory-list').innerHTML = invHtml || '<p style="color:#666">Пусто</p>';
+
+        // Лог
+        const logEl = document.getElementById('log-display');
+        logEl.innerHTML = this.log.slice(-10).map(m => `<p>${m}</p>`).join('');
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    restart() {
+        document.getElementById('death-screen').classList.add('hidden');
+        document.getElementById('game-area').classList.add('hidden');
+        document.getElementById('class-select').classList.remove('hidden');
+        this.state = 'class_select';
+        this.log = [];
+        this.turn = 0;
+    }
+
+    bindKeys() {
+        document.addEventListener('keydown', (e) => {
+            if (this.state !== 'playing') return;
+
+            const key = e.key.toLowerCase();
+
+            if (this.targeting) {
+                if (key === 'escape') { this.cancelTarget(); e.preventDefault(); }
+                else if (key === 'enter') { this.confirmTarget(); e.preventDefault(); }
+                else if (key === 'w' || key === 'arrowup') { this.moveTarget(0, -1); e.preventDefault(); }
+                else if (key === 's' || key === 'arrowdown') { this.moveTarget(0, 1); e.preventDefault(); }
+                else if (key === 'a' || key === 'arrowleft') { this.moveTarget(-1, 0); e.preventDefault(); }
+                else if (key === 'd' || key === 'arrowright') { this.moveTarget(1, 0); e.preventDefault(); }
+                return;
+            }
+
+            const moves = {
+                'w': [0,-1], 'arrowup': [0,-1],
+                's': [0,1], 'arrowdown': [0,1],
+                'a': [-1,0], 'arrowleft': [-1,0],
+                'd': [1,0], 'arrowright': [1,0],
+                'q': [-1,-1], 'e': [1,-1],
+                'z': [-1,1], 'x': [1,1]
+            };
+
+            if (moves[key]) {
+                this.move(...moves[key]);
+                e.preventDefault();
+            } else if (key === ' ') {
+                this.wait();
+                e.preventDefault();
+            } else if (key === 'g') {
+                this.pickup();
+            } else if (key === '>') {
+                this.descend();
+            } else if (key >= '1' && key <= '5') {
+                this.castSpell(parseInt(key) - 1);
+            }
+        });
+    }
+}
+
+// Запуск
+const game = new Game();
+</script>
+</body>
+</html>

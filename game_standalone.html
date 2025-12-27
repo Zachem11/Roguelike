@@ -206,7 +206,7 @@
 </head>
 <body>
     <h1>☢ ПЕПЕЛ ЦИВИЛИЗАЦИИ ☢</h1>
-    <p class="subtitle">Постапокалиптический рогалик | 2077 год, после Великой Войны | v0.0.1</p>
+    <p class="subtitle">Постапокалиптический рогалик | 2077 год, после Великой Войны | v0.0.2</p>
 
     <div class="death-screen hidden" id="death-screen">
         <h2>ВЫ ПОГИБЛИ</h2>
@@ -351,16 +351,177 @@ const ENEMY_TEMPLATES = {
     deathclaw: { name: 'Коготь смерти', symbol: 'D', color: '#660000', hp: 50, str: 12, damage: 15, armor: 5, xp: 100, ai: 'aggressive', radRes: 80 }
 };
 
-// ==================== ПРЕДМЕТЫ ====================
-const ITEM_TEMPLATES = [
-    { name: 'Ржавый пистолет', type: 'weapon', symbol: '/', color: '#aaaaaa', damage: 3 },
-    { name: 'Аптечка', type: 'consumable', symbol: '!', color: '#ff0000', heal: 25 },
-    { name: 'Антирад', type: 'consumable', symbol: '!', color: '#00ff00', radHeal: 20 },
-    { name: 'Бронежилет', type: 'armor', symbol: '[', color: '#5555ff', armor: 2 },
-    { name: 'Обрез', type: 'weapon', symbol: '/', color: '#884422', damage: 6 },
-    { name: 'Энергетик', type: 'consumable', symbol: '!', color: '#ffff00', manaRestore: 20 },
-    { name: 'Штурмовая винтовка', type: 'weapon', symbol: '/', color: '#666666', damage: 8 }
+// ==================== СИСТЕМА РЕДКОСТИ ====================
+const RARITY = {
+    common:    { name: 'Обычный',     color: '#aaaaaa', multiplier: 1.0, modChance: 0 },
+    uncommon:  { name: 'Необычный',   color: '#44ff44', multiplier: 1.2, modChance: 0.3 },
+    rare:      { name: 'Редкий',      color: '#4488ff', multiplier: 1.5, modChance: 0.6 },
+    legendary: { name: 'Легендарный', color: '#ff8800', multiplier: 2.0, modChance: 1.0 }
+};
+
+// ==================== МОДИФИКАТОРЫ ====================
+const WEAPON_MODS = [
+    { name: 'Острый', stat: 'damage', bonus: 2, desc: '+2 урона' },
+    { name: 'Смертоносный', stat: 'damage', bonus: 4, desc: '+4 урона' },
+    { name: 'Критический', stat: 'critChance', bonus: 15, desc: '+15% крит' },
+    { name: 'Палача', stat: 'critDamage', bonus: 50, desc: '+50% крит урон' },
+    { name: 'Дальнобойный', stat: 'range', bonus: 2, desc: '+2 дальность' },
+    { name: 'Пылающий', stat: 'fireDamage', bonus: 3, desc: '+3 огн. урона' },
+    { name: 'Шоковый', stat: 'elecDamage', bonus: 3, desc: '+3 элек. урона' }
 ];
+
+const ARMOR_MODS = [
+    { name: 'Укреплённый', stat: 'armor', bonus: 2, desc: '+2 брони' },
+    { name: 'Живучий', stat: 'maxHp', bonus: 15, desc: '+15 HP' },
+    { name: 'Огнестойкий', stat: 'fireRes', bonus: 20, desc: '+20% огнестойкость' },
+    { name: 'Противорадиационный', stat: 'radRes', bonus: 25, desc: '+25% радиозащита' },
+    { name: 'Энергетический', stat: 'maxMana', bonus: 10, desc: '+10 маны' },
+    { name: 'Регенерирующий', stat: 'hpRegen', bonus: 1, desc: '+1 HP/ход' }
+];
+
+// ==================== ПРЕДМЕТЫ ====================
+const ITEM_TEMPLATES = {
+    weapons: [
+        { name: 'Ржавый пистолет', symbol: '/', baseDamage: 3, desc: 'Старый полуавтомат' },
+        { name: 'Обрез', symbol: '/', baseDamage: 6, desc: 'Двуствольное оружие' },
+        { name: 'Штурмовая винтовка', symbol: '/', baseDamage: 8, desc: 'Военная винтовка' },
+        { name: 'Плазменный пистолет', symbol: '/', baseDamage: 10, desc: 'Довоенные технологии' },
+        { name: 'Лазерная винтовка', symbol: '/', baseDamage: 12, desc: 'Луч смерти' },
+        { name: 'Гаусс-пушка', symbol: '/', baseDamage: 18, desc: 'Электромагнитное оружие' }
+    ],
+    armor: [
+        { name: 'Кожаная куртка', symbol: '[', baseArmor: 1, desc: 'Лучше чем ничего' },
+        { name: 'Бронежилет', symbol: '[', baseArmor: 3, desc: 'Кевларовая защита' },
+        { name: 'Боевая броня', symbol: '[', baseArmor: 5, desc: 'Военная броня' },
+        { name: 'Силовая броня', symbol: '[', baseArmor: 8, desc: 'Экзоскелет', maxHpBonus: 20 }
+    ],
+    consumables: [
+        { name: 'Аптечка', symbol: '!', color: '#ff0000', heal: 25, desc: 'Восстанавливает HP' },
+        { name: 'Супер-стимулятор', symbol: '!', color: '#ff4488', heal: 50, desc: 'Мощное лечение' },
+        { name: 'Антирад', symbol: '!', color: '#00ff00', radHeal: 30, desc: 'Снижает радиацию' },
+        { name: 'Энергетик', symbol: '!', color: '#ffff00', manaRestore: 25, desc: 'Восстанавливает ману' },
+        { name: 'Буффаут', symbol: '!', color: '#ff8844', tempStr: 3, duration: 10, desc: '+3 силы на 10 ходов' },
+        { name: 'Ментаты', symbol: '!', color: '#88ffff', tempInt: 3, duration: 10, desc: '+3 интеллекта на 10 ходов' }
+    ],
+    grenades: [
+        { name: 'Осколочная граната', symbol: '*', color: '#888888', damage: 20, area: 3, type: 'PHYSICAL', desc: 'Взрыв осколков' },
+        { name: 'Зажигательная граната', symbol: '*', color: '#ff4400', damage: 15, area: 2, type: 'FIRE', burnDuration: 3, desc: 'Поджигает область' },
+        { name: 'EMP-граната', symbol: '*', color: '#4488ff', damage: 25, area: 3, type: 'ELECTRIC', empEffect: true, desc: 'Против роботов x2' },
+        { name: 'Плазменная граната', symbol: '*', color: '#00ff88', damage: 30, area: 2, type: 'FIRE', desc: 'Мощный взрыв плазмы' },
+        { name: 'Криогенная граната', symbol: '*', color: '#88ffff', damage: 10, area: 3, type: 'COLD', freezeDuration: 2, desc: 'Замораживает врагов' }
+    ],
+    artifacts: [
+        { name: 'Сердце Зоны', symbol: '&', color: '#ff00ff', hpRegen: 2, radRes: -10, desc: 'Регенерация, но радиация' },
+        { name: 'Батарейка', symbol: '&', color: '#ffff00', manaRegen: 2, desc: 'Восстановление маны' },
+        { name: 'Кровь камня', symbol: '&', color: '#ff0000', maxHp: 25, agi: -1, desc: '+HP, но медленнее' },
+        { name: 'Ночная звезда', symbol: '&', color: '#aaaaff', fovBonus: 3, desc: 'Улучшенное зрение' }
+    ]
+};
+
+// Генератор предметов
+function generateItem(depth, forceRarity = null) {
+    // Определяем редкость
+    let rarity;
+    if (forceRarity) {
+        rarity = forceRarity;
+    } else {
+        const roll = Math.random();
+        if (roll < 0.5 - depth * 0.02) rarity = 'common';
+        else if (roll < 0.8 - depth * 0.01) rarity = 'uncommon';
+        else if (roll < 0.95) rarity = 'rare';
+        else rarity = 'legendary';
+    }
+
+    const rarityData = RARITY[rarity];
+
+    // Выбираем тип предмета
+    const typeRoll = Math.random();
+    let item;
+
+    if (typeRoll < 0.25) {
+        // Оружие
+        const templates = ITEM_TEMPLATES.weapons.filter(w => w.baseDamage <= 5 + depth * 3);
+        const template = templates[Math.floor(Math.random() * templates.length)] || ITEM_TEMPLATES.weapons[0];
+
+        item = {
+            name: template.name,
+            type: 'weapon',
+            symbol: template.symbol,
+            color: rarityData.color,
+            damage: Math.floor(template.baseDamage * rarityData.multiplier) + Math.floor(depth / 2),
+            rarity: rarity,
+            desc: template.desc,
+            mods: []
+        };
+
+        // Добавляем модификаторы
+        if (Math.random() < rarityData.modChance) {
+            const mod = WEAPON_MODS[Math.floor(Math.random() * WEAPON_MODS.length)];
+            item.mods.push(mod);
+            item.name = mod.name + ' ' + item.name;
+            item[mod.stat] = (item[mod.stat] || 0) + mod.bonus;
+        }
+        if (rarity === 'legendary' && Math.random() < 0.5) {
+            const mod = WEAPON_MODS[Math.floor(Math.random() * WEAPON_MODS.length)];
+            if (!item.mods.find(m => m.stat === mod.stat)) {
+                item.mods.push(mod);
+                item[mod.stat] = (item[mod.stat] || 0) + mod.bonus;
+            }
+        }
+
+    } else if (typeRoll < 0.4) {
+        // Броня
+        const templates = ITEM_TEMPLATES.armor.filter(a => a.baseArmor <= 2 + depth);
+        const template = templates[Math.floor(Math.random() * templates.length)] || ITEM_TEMPLATES.armor[0];
+
+        item = {
+            name: template.name,
+            type: 'armor',
+            symbol: template.symbol,
+            color: rarityData.color,
+            armor: Math.floor(template.baseArmor * rarityData.multiplier),
+            rarity: rarity,
+            desc: template.desc,
+            mods: [],
+            maxHpBonus: template.maxHpBonus || 0
+        };
+
+        if (Math.random() < rarityData.modChance) {
+            const mod = ARMOR_MODS[Math.floor(Math.random() * ARMOR_MODS.length)];
+            item.mods.push(mod);
+            item.name = mod.name + ' ' + item.name;
+            item[mod.stat] = (item[mod.stat] || 0) + mod.bonus;
+        }
+
+    } else if (typeRoll < 0.7) {
+        // Расходники
+        const template = ITEM_TEMPLATES.consumables[Math.floor(Math.random() * ITEM_TEMPLATES.consumables.length)];
+        item = { ...template, type: 'consumable', rarity: 'common' };
+
+    } else if (typeRoll < 0.85) {
+        // Гранаты
+        const template = ITEM_TEMPLATES.grenades[Math.floor(Math.random() * ITEM_TEMPLATES.grenades.length)];
+        item = {
+            ...template,
+            type: 'grenade',
+            damage: Math.floor(template.damage * (1 + depth * 0.1)),
+            rarity: 'common'
+        };
+
+    } else {
+        // Артефакты (редкие)
+        if (depth >= 2 && Math.random() < 0.3 + depth * 0.05) {
+            const template = ITEM_TEMPLATES.artifacts[Math.floor(Math.random() * ITEM_TEMPLATES.artifacts.length)];
+            item = { ...template, type: 'artifact', rarity: 'rare' };
+        } else {
+            // Фоллбек на расходник
+            const template = ITEM_TEMPLATES.consumables[0];
+            item = { ...template, type: 'consumable', rarity: 'common' };
+        }
+    }
+
+    return item;
+}
 
 // ==================== ИГРА ====================
 class Game {
@@ -411,9 +572,13 @@ class Game {
             className: cls.name, classKey: classKey,
             spells: cls.spells.map(s => ({...s, currentCooldown: 0})),
             inventory: [
-                { name: 'Аптечка', type: 'consumable', symbol: '!', color: '#ff0000', heal: 25 }
+                { name: 'Аптечка', type: 'consumable', symbol: '!', color: '#ff0000', heal: 25, rarity: 'common' },
+                { name: 'Осколочная граната', type: 'grenade', symbol: '*', color: '#888888', damage: 20, area: 3, damageType: 'PHYSICAL', rarity: 'common' }
             ],
-            equipped: { weapon: null, armor: null }
+            equipped: { weapon: null, armor: null },
+            effects: [],
+            critChance: 5,
+            critDamage: 150
         };
 
         this.depth = 1;
@@ -491,12 +656,14 @@ class Game {
 
         // Добавляем предметы
         for (const room of rooms) {
-            if (Math.random() < 0.4) {
+            if (Math.random() < 0.45) {
                 const rx = room.x + 1 + Math.floor(Math.random() * (room.w - 2));
                 const ry = room.y + 1 + Math.floor(Math.random() * (room.h - 2));
                 if (this.map[rx][ry].walkable && this.map[rx][ry].symbol === TILES.floor) {
-                    const template = ITEM_TEMPLATES[Math.floor(Math.random() * ITEM_TEMPLATES.length)];
-                    this.items.push({ ...template, x: rx, y: ry, damage: (template.damage || 0) + this.depth });
+                    const item = generateItem(this.depth);
+                    item.x = rx;
+                    item.y = ry;
+                    this.items.push(item);
                 }
             }
         }
@@ -789,7 +956,15 @@ class Game {
     }
 
     confirmTarget() {
-        if (!this.targeting || !this.selectedSpell) return;
+        if (!this.targeting) return;
+
+        // Проверяем, граната это или заклинание
+        if (this.selectedGrenade) {
+            this.throwGrenade(this.targetX, this.targetY);
+            return;
+        }
+
+        if (!this.selectedSpell) return;
 
         this.targeting = false;
         document.getElementById('targeting-overlay').classList.add('hidden');
@@ -802,6 +977,8 @@ class Game {
     cancelTarget() {
         this.targeting = false;
         this.selectedSpell = null;
+        this.selectedGrenade = null;
+        this.selectedGrenadeIndex = -1;
         document.getElementById('targeting-overlay').classList.add('hidden');
         this.addLog('Отмена');
         this.render();
@@ -843,38 +1020,166 @@ class Game {
                 this.player.mana += restore;
                 this.addLog(`Использован ${item.name}. Восстановлено ${restore} маны.`);
             }
+            // Временные бонусы
+            if (item.tempStr) {
+                this.player.effects.push({ type: 'str', bonus: item.tempStr, duration: item.duration || 10 });
+                this.player.str += item.tempStr;
+                this.addLog(`${item.name}: +${item.tempStr} Сила на ${item.duration} ходов!`);
+            }
+            if (item.tempInt) {
+                this.player.effects.push({ type: 'int', bonus: item.tempInt, duration: item.duration || 10 });
+                this.player.int += item.tempInt;
+                this.addLog(`${item.name}: +${item.tempInt} Интеллект на ${item.duration} ходов!`);
+            }
             this.player.inventory.splice(index, 1);
             this.endTurn();
+
+        } else if (item.type === 'grenade') {
+            // Гранаты требуют выбора цели
+            this.targeting = true;
+            this.selectedGrenade = item;
+            this.selectedGrenadeIndex = index;
+            this.targetX = this.player.x;
+            this.targetY = this.player.y;
+            document.getElementById('targeting-overlay').classList.remove('hidden');
+            document.getElementById('targeting-spell-name').textContent = item.name + ' (граната)';
+            this.addLog(`Выберите цель для ${item.name}...`);
+            this.render();
+
         } else if (item.type === 'weapon') {
+            // Снимаем бонусы старого оружия
             if (this.player.equipped.weapon === item) {
+                this.unapplyItemBonuses(item);
                 this.player.equipped.weapon = null;
                 item.equipped = false;
                 this.addLog(`${item.name} снято.`);
             } else {
-                if (this.player.equipped.weapon) this.player.equipped.weapon.equipped = false;
+                if (this.player.equipped.weapon) {
+                    this.unapplyItemBonuses(this.player.equipped.weapon);
+                    this.player.equipped.weapon.equipped = false;
+                }
                 this.player.equipped.weapon = item;
+                this.applyItemBonuses(item);
                 item.equipped = true;
-                this.addLog(`${item.name} экипировано.`);
+                this.addLog(`${item.name} экипировано. (+${item.damage} урон)`);
             }
+
         } else if (item.type === 'armor') {
             if (this.player.equipped.armor === item) {
+                this.unapplyItemBonuses(item);
                 this.player.armor -= item.armor;
                 this.player.equipped.armor = null;
                 item.equipped = false;
                 this.addLog(`${item.name} снято.`);
             } else {
                 if (this.player.equipped.armor) {
+                    this.unapplyItemBonuses(this.player.equipped.armor);
                     this.player.armor -= this.player.equipped.armor.armor;
                     this.player.equipped.armor.equipped = false;
                 }
                 this.player.equipped.armor = item;
                 this.player.armor += item.armor;
+                this.applyItemBonuses(item);
                 item.equipped = true;
-                this.addLog(`${item.name} экипировано.`);
+                this.addLog(`${item.name} экипировано. (+${item.armor} броня)`);
+            }
+
+        } else if (item.type === 'artifact') {
+            // Артефакты работают пока в инвентаре
+            item.active = !item.active;
+            if (item.active) {
+                this.applyItemBonuses(item);
+                this.addLog(`${item.name} активирован.`);
+            } else {
+                this.unapplyItemBonuses(item);
+                this.addLog(`${item.name} деактивирован.`);
             }
         }
 
         this.render();
+    }
+
+    applyItemBonuses(item) {
+        if (item.maxHp) this.player.maxHp += item.maxHp;
+        if (item.maxHpBonus) this.player.maxHp += item.maxHpBonus;
+        if (item.maxMana) this.player.maxMana += item.maxMana;
+        if (item.fireRes) this.player.fireRes += item.fireRes;
+        if (item.radRes) this.player.radRes += item.radRes;
+        if (item.critChance) this.player.critChance += item.critChance;
+        if (item.critDamage) this.player.critDamage += item.critDamage;
+    }
+
+    unapplyItemBonuses(item) {
+        if (item.maxHp) this.player.maxHp -= item.maxHp;
+        if (item.maxHpBonus) this.player.maxHp -= item.maxHpBonus;
+        if (item.maxMana) this.player.maxMana -= item.maxMana;
+        if (item.fireRes) this.player.fireRes -= item.fireRes;
+        if (item.radRes) this.player.radRes -= item.radRes;
+        if (item.critChance) this.player.critChance -= item.critChance;
+        if (item.critDamage) this.player.critDamage -= item.critDamage;
+    }
+
+    throwGrenade(targetX, targetY) {
+        const item = this.selectedGrenade;
+        if (!item) return;
+
+        const dist = Math.sqrt((targetX - this.player.x) ** 2 + (targetY - this.player.y) ** 2);
+        if (dist > 8) {
+            this.addLog('Слишком далеко для броска!');
+            return;
+        }
+
+        this.addLog(`Вы бросаете ${item.name}!`);
+
+        // Урон в области
+        let hits = 0;
+        for (const entity of [...this.entities]) {
+            const d = Math.sqrt((entity.x - targetX) ** 2 + (entity.y - targetY) ** 2);
+            if (d <= item.area) {
+                let dmg = item.damage;
+                // EMP наносит двойной урон роботам
+                if (item.empEffect && entity.name.includes('Робот')) {
+                    dmg *= 2;
+                }
+                // Сопротивления
+                if (item.type === 'FIRE' && entity.fireRes) {
+                    dmg = Math.floor(dmg * (100 - entity.fireRes) / 100);
+                }
+
+                entity.hp -= dmg;
+                this.addLog(`${item.name} поражает ${entity.name}! Урон: ${dmg}`);
+                hits++;
+
+                // Эффект горения
+                if (item.burnDuration) {
+                    entity.burning = item.burnDuration;
+                }
+                // Эффект заморозки
+                if (item.freezeDuration) {
+                    entity.frozen = item.freezeDuration;
+                }
+
+                if (entity.hp <= 0) {
+                    this.addLog(`${entity.name} уничтожен!`);
+                    this.player.xp += entity.xp;
+                    this.checkLevelUp();
+                    this.entities = this.entities.filter(e => e !== entity);
+                }
+            }
+        }
+
+        if (hits === 0) {
+            this.addLog(`${item.name} никого не задел.`);
+        }
+
+        // Удаляем гранату из инвентаря
+        this.player.inventory.splice(this.selectedGrenadeIndex, 1);
+        this.selectedGrenade = null;
+        this.selectedGrenadeIndex = -1;
+        this.targeting = false;
+        document.getElementById('targeting-overlay').classList.add('hidden');
+
+        this.endTurn();
     }
 
     descend() {
@@ -1073,9 +1378,21 @@ class Game {
         // Инвентарь
         let invHtml = '';
         this.player.inventory.forEach((item, i) => {
-            const eqClass = item.equipped ? 'equipped' : '';
-            invHtml += `<div class="item ${eqClass}" onclick="game.useItem(${i})">
-                <span style="color:${item.color}">${item.symbol}</span> ${item.name}
+            const eqClass = item.equipped ? 'equipped' : (item.active ? 'equipped' : '');
+            const rarityColor = RARITY[item.rarity]?.color || '#aaa';
+            let stats = '';
+            if (item.type === 'weapon') stats = `Урон: ${item.damage}`;
+            else if (item.type === 'armor') stats = `Броня: ${item.armor}`;
+            else if (item.type === 'grenade') stats = `Урон: ${item.damage} (R:${item.area})`;
+            else if (item.heal) stats = `Лечение: ${item.heal}`;
+            else if (item.manaRestore) stats = `Мана: +${item.manaRestore}`;
+
+            const mods = item.mods?.map(m => m.desc).join(', ') || '';
+
+            invHtml += `<div class="item ${eqClass}" onclick="game.useItem(${i})" title="${item.desc || ''}${mods ? '\n' + mods : ''}">
+                <span style="color:${item.color}">${item.symbol}</span>
+                <span style="color:${rarityColor}">${item.name}</span>
+                ${stats ? `<br><small style="color:#888">${stats}</small>` : ''}
             </div>`;
         });
         document.getElementById('inventory-list').innerHTML = invHtml || '<p style="color:#666">Пусто</p>';

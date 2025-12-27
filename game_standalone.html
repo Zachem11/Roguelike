@@ -206,7 +206,7 @@
 </head>
 <body>
     <h1>☢ ПЕПЕЛ ЦИВИЛИЗАЦИИ ☢</h1>
-    <p class="subtitle">Постапокалиптический рогалик | 2077 год, после Великой Войны | v0.0.3</p>
+    <p class="subtitle">Постапокалиптический рогалик | 2077 год, после Великой Войны | v0.0.4</p>
 
     <div class="death-screen hidden" id="death-screen">
         <h2>ВЫ ПОГИБЛИ</h2>
@@ -288,11 +288,12 @@ const CHARACTER_CLASSES = {
         fireRes: 50, radRes: 0,
         desc: 'Повелитель огня. Способен испепелять врагов. Сильный пиромант по мощи равен крематорию!',
         spells: [
-            { name: 'Огненный шар', cost: 15, damage: 25, type: 'FIRE', range: 6, area: 2, cooldown: 0 },
-            { name: 'Поток пламени', cost: 8, damage: 12, type: 'FIRE', range: 4, area: 0, cooldown: 0 },
-            { name: 'Огненная стена', cost: 20, damage: 8, type: 'FIRE', range: 5, area: 3, cooldown: 0 },
+            { name: 'Огненный шар', cost: 15, damage: 25, type: 'FIRE', range: 6, area: 2, cooldown: 0, effect: 'burn', effectDuration: 2 },
+            { name: 'Поток пламени', cost: 8, damage: 12, type: 'FIRE', range: 4, area: 0, cooldown: 0, effect: 'burn', effectDuration: 3 },
+            { name: 'Огненный дождь', cost: 30, damage: 15, type: 'FIRE', range: 6, area: 4, cooldown: 4, effect: 'burn', effectDuration: 2 },
+            { name: 'Самовозгорание', cost: 20, damage: 0, type: 'FIRE', range: 0, area: 0, cooldown: 5, special: 'fireAura' },
             { name: 'Испепеление', cost: 35, damage: 50, type: 'FIRE', range: 3, area: 0, cooldown: 5 },
-            { name: 'Взрыв сверхновой', cost: 50, damage: 40, type: 'FIRE', range: 0, area: 5, cooldown: 10 }
+            { name: 'Феникс', cost: 60, damage: 0, type: 'FIRE', range: 0, area: 0, cooldown: 15, special: 'phoenix' }
         ]
     },
     STALKER: {
@@ -301,8 +302,11 @@ const CHARACTER_CLASSES = {
         fireRes: 10, radRes: 30,
         desc: 'Выживальщик пустошей. Мастер скрытности и дальнего боя.',
         spells: [
-            { name: 'Меткий выстрел', cost: 5, damage: 15, type: 'PHYSICAL', range: 10, area: 0, cooldown: 0 },
-            { name: 'Уклонение', cost: 10, damage: 0, type: 'PHYSICAL', range: 0, area: 0, cooldown: 3, special: 'dodge' }
+            { name: 'Меткий выстрел', cost: 5, damage: 18, type: 'PHYSICAL', range: 10, area: 0, cooldown: 0 },
+            { name: 'Отравленная стрела', cost: 12, damage: 8, type: 'PHYSICAL', range: 8, area: 0, cooldown: 0, effect: 'poison', effectDuration: 4 },
+            { name: 'Ловушка', cost: 15, damage: 25, type: 'PHYSICAL', range: 4, area: 0, cooldown: 3, special: 'trap' },
+            { name: 'Камуфляж', cost: 20, damage: 0, type: 'PHYSICAL', range: 0, area: 0, cooldown: 6, special: 'stealth' },
+            { name: 'Смертельный выстрел', cost: 25, damage: 40, type: 'PHYSICAL', range: 12, area: 0, cooldown: 5, critBonus: 50 }
         ]
     },
     TECHNOPRIEST: {
@@ -311,9 +315,12 @@ const CHARACTER_CLASSES = {
         fireRes: 20, radRes: 20,
         desc: 'Жрец машинного культа. Повелевает электричеством и техникой.',
         spells: [
-            { name: 'Электрошок', cost: 8, damage: 10, type: 'ELECTRIC', range: 5, area: 0, cooldown: 0 },
-            { name: 'Взлом дрона', cost: 15, damage: 0, type: 'PSYCHIC', range: 6, area: 0, cooldown: 5, special: 'hack' },
-            { name: 'EMP-импульс', cost: 25, damage: 15, type: 'ELECTRIC', range: 0, area: 4, cooldown: 4 }
+            { name: 'Электрошок', cost: 8, damage: 12, type: 'ELECTRIC', range: 5, area: 0, cooldown: 0, effect: 'shock', effectDuration: 1 },
+            { name: 'Цепная молния', cost: 18, damage: 10, type: 'ELECTRIC', range: 6, area: 0, cooldown: 2, special: 'chain', chainCount: 3 },
+            { name: 'Дрон-разведчик', cost: 15, damage: 0, type: 'ELECTRIC', range: 0, area: 0, cooldown: 8, special: 'drone' },
+            { name: 'Силовое поле', cost: 25, damage: 0, type: 'ELECTRIC', range: 0, area: 0, cooldown: 6, special: 'forceField' },
+            { name: 'EMP-импульс', cost: 25, damage: 20, type: 'ELECTRIC', range: 0, area: 4, cooldown: 4, special: 'emp' },
+            { name: 'Перегрузка', cost: 40, damage: 35, type: 'ELECTRIC', range: 5, area: 2, cooldown: 6, effect: 'shock', effectDuration: 2 }
         ]
     },
     PSI_OPERATIVE: {
@@ -322,9 +329,12 @@ const CHARACTER_CLASSES = {
         fireRes: 0, radRes: 10,
         desc: 'Псионик. Атакует и защищается силой разума.',
         spells: [
-            { name: 'Ментальный удар', cost: 10, damage: 12, type: 'PSYCHIC', range: 6, area: 0, cooldown: 0 },
-            { name: 'Контроль разума', cost: 20, damage: 0, type: 'PSYCHIC', range: 5, area: 0, cooldown: 6, special: 'control' },
-            { name: 'Пси-щит', cost: 15, damage: 0, type: 'PSYCHIC', range: 0, area: 0, cooldown: 4, special: 'shield' }
+            { name: 'Ментальный удар', cost: 10, damage: 14, type: 'PSYCHIC', range: 6, area: 0, cooldown: 0 },
+            { name: 'Телекинез', cost: 15, damage: 20, type: 'PSYCHIC', range: 5, area: 0, cooldown: 2, special: 'push' },
+            { name: 'Предвидение', cost: 12, damage: 0, type: 'PSYCHIC', range: 0, area: 0, cooldown: 5, special: 'foresight' },
+            { name: 'Контроль разума', cost: 25, damage: 0, type: 'PSYCHIC', range: 5, area: 0, cooldown: 8, special: 'control', controlDuration: 3 },
+            { name: 'Пси-щит', cost: 18, damage: 0, type: 'PSYCHIC', range: 0, area: 0, cooldown: 5, special: 'shield', shieldAmount: 30 },
+            { name: 'Массовый контроль', cost: 45, damage: 0, type: 'PSYCHIC', range: 0, area: 5, cooldown: 10, special: 'massControl', effect: 'stun', effectDuration: 2 }
         ]
     },
     MUTANT: {
@@ -333,9 +343,12 @@ const CHARACTER_CLASSES = {
         fireRes: 20, radRes: 80,
         desc: 'Мутировавший от радиации. Невероятно живуч.',
         spells: [
-            { name: 'Регенерация', cost: 10, damage: -25, type: 'RADIATION', range: 0, area: 0, cooldown: 3, special: 'heal' },
-            { name: 'Кислотный плевок', cost: 8, damage: 10, type: 'RADIATION', range: 4, area: 0, cooldown: 0 },
-            { name: 'Радиоактивный взрыв', cost: 20, damage: 18, type: 'RADIATION', range: 0, area: 3, cooldown: 5 }
+            { name: 'Регенерация', cost: 10, damage: -30, type: 'RADIATION', range: 0, area: 0, cooldown: 3, special: 'heal' },
+            { name: 'Кислотный плевок', cost: 8, damage: 12, type: 'RADIATION', range: 4, area: 0, cooldown: 0, effect: 'acid', effectDuration: 3 },
+            { name: 'Мутация', cost: 20, damage: 0, type: 'RADIATION', range: 0, area: 0, cooldown: 10, special: 'mutate' },
+            { name: 'Радиоактивная аура', cost: 15, damage: 5, type: 'RADIATION', range: 0, area: 2, cooldown: 0, special: 'radAura' },
+            { name: 'Радиоактивный взрыв', cost: 25, damage: 22, type: 'RADIATION', range: 0, area: 3, cooldown: 5 },
+            { name: 'Деление', cost: 50, damage: 0, type: 'RADIATION', range: 0, area: 0, cooldown: 15, special: 'split' }
         ]
     }
 };
@@ -797,6 +810,13 @@ class Game {
             }
         }
 
+        // Бонус к радиусу от артефактов и дрона
+        let fovBonus = this.player.inventory.reduce((sum, item) =>
+            sum + (item.active && item.fovBonus ? item.fovBonus : 0), 0);
+        if (this.player.droneActive > 0) fovBonus += 3;
+
+        const currentFOV = FOV_RADIUS + fovBonus;
+
         // Raycasting FOV
         for (let angle = 0; angle < 360; angle += 1) {
             const rad = angle * Math.PI / 180;
@@ -806,7 +826,7 @@ class Game {
             let px = this.player.x + 0.5;
             let py = this.player.y + 0.5;
 
-            for (let i = 0; i < FOV_RADIUS; i++) {
+            for (let i = 0; i < currentFOV; i++) {
                 px += dx;
                 py += dy;
                 const tx = Math.floor(px);
@@ -948,8 +968,17 @@ class Game {
         this.player.mana -= spell.cost;
         spell.currentCooldown = spell.cooldown || 0;
 
+        // Обработка специальных заклинаний
+        if (spell.special) {
+            const result = this.handleSpecialSpell(spell, targetX, targetY);
+            if (result) {
+                this.endTurn();
+                return true;
+            }
+        }
+
         // Самолечение
-        if (spell.special === 'heal' || spell.damage < 0) {
+        if (spell.damage < 0) {
             const heal = Math.min(-spell.damage, this.player.maxHp - this.player.hp);
             this.player.hp += heal;
             this.addLog(`${spell.name}: восстановлено ${heal} HP`);
@@ -961,45 +990,390 @@ class Game {
         if (spell.area > 0) {
             let hits = 0;
             for (const entity of [...this.entities]) {
+                if (entity.controlled) continue; // Не бьём подконтрольных
                 const d = Math.sqrt((entity.x - targetX) ** 2 + (entity.y - targetY) ** 2);
                 if (d <= spell.area) {
-                    let dmg = spell.damage;
-                    if (spell.type === 'FIRE') dmg = Math.floor(dmg * (100 - (entity.fireRes || 0)) / 100);
-                    if (spell.type === 'RADIATION') dmg = Math.floor(dmg * (100 - (entity.radRes || 0)) / 100);
-                    entity.hp -= dmg;
-                    this.addLog(`${spell.name} поражает ${entity.name}! Урон: ${dmg}`);
-                    hits++;
-
-                    if (entity.hp <= 0) {
-                        this.addLog(`${entity.name} испепелён!`);
-                        this.player.xp += entity.xp;
-                        this.entities = this.entities.filter(e => e !== entity);
-                    }
+                    hits += this.applySpellDamage(entity, spell);
                 }
             }
             if (hits === 0) this.addLog(`${spell.name} никого не задел.`);
         } else {
             // Одиночная цель
             const target = this.getEntityAt(targetX, targetY);
-            if (target) {
-                let dmg = spell.damage;
-                if (spell.type === 'FIRE') dmg = Math.floor(dmg * (100 - (target.fireRes || 0)) / 100);
-                if (spell.type === 'RADIATION') dmg = Math.floor(dmg * (100 - (target.radRes || 0)) / 100);
-                target.hp -= dmg;
-                this.addLog(`${spell.name} поражает ${target.name}! Урон: ${dmg}`);
-
-                if (target.hp <= 0) {
-                    this.addLog(`${target.name} повержен!`);
-                    this.player.xp += target.xp;
-                    this.checkLevelUp();
-                    this.entities = this.entities.filter(e => e !== target);
-                }
+            if (target && !target.controlled) {
+                this.applySpellDamage(target, spell);
             } else {
                 this.addLog(`${spell.name} - промах!`);
             }
         }
 
         this.endTurn();
+        return true;
+    }
+
+    applySpellDamage(entity, spell) {
+        let dmg = spell.damage;
+
+        // Бонус критического урона
+        if (spell.critBonus && Math.random() < (this.player.critChance + spell.critBonus) / 100) {
+            dmg = Math.floor(dmg * this.player.critDamage / 100);
+            this.addLog('Критический урон!');
+        }
+
+        // Сопротивления
+        if (spell.type === 'FIRE') dmg = Math.floor(dmg * (100 - (entity.fireRes || 0)) / 100);
+        if (spell.type === 'RADIATION') dmg = Math.floor(dmg * (100 - (entity.radRes || 0)) / 100);
+
+        // EMP двойной урон роботам
+        if (spell.special === 'emp' && entity.name.includes('Робот')) {
+            dmg *= 2;
+            this.addLog('EMP особенно эффективен!');
+        }
+
+        entity.hp -= dmg;
+        this.addLog(`${spell.name} поражает ${entity.name}! Урон: ${dmg}`);
+
+        // Применяем эффекты
+        if (spell.effect && spell.effectDuration) {
+            this.applyEffect(entity, spell.effect, spell.effectDuration);
+        }
+
+        if (entity.hp <= 0) {
+            this.addLog(`${entity.name} повержен!`);
+            this.player.xp += entity.xp;
+            this.checkLevelUp();
+            this.entities = this.entities.filter(e => e !== entity);
+        }
+
+        return 1;
+    }
+
+    applyEffect(entity, effect, duration) {
+        switch(effect) {
+            case 'burn':
+                entity.burning = Math.max(entity.burning || 0, duration);
+                this.addLog(`${entity.name} горит!`);
+                break;
+            case 'poison':
+                entity.poisoned = Math.max(entity.poisoned || 0, duration);
+                this.addLog(`${entity.name} отравлен!`);
+                break;
+            case 'acid':
+                entity.acidBurn = Math.max(entity.acidBurn || 0, duration);
+                entity.armor = Math.max(0, (entity.armor || 0) - 1);
+                this.addLog(`${entity.name} покрыт кислотой! Броня снижена.`);
+                break;
+            case 'shock':
+                entity.shocked = Math.max(entity.shocked || 0, duration);
+                this.addLog(`${entity.name} в шоке!`);
+                break;
+            case 'stun':
+                entity.frozen = Math.max(entity.frozen || 0, duration);
+                this.addLog(`${entity.name} оглушён!`);
+                break;
+            case 'wet':
+                entity.wet = Math.max(entity.wet || 0, duration);
+                this.addLog(`${entity.name} промокнуть!`);
+                break;
+        }
+
+        // Проверяем комбо-эффекты
+        this.checkSpellCombo(entity);
+    }
+
+    // Система комбо-эффектов (синергии)
+    checkSpellCombo(entity) {
+        if (!entity || entity.hp <= 0) return;
+
+        // Мокрый + Электричество = усиленный шок (двойной урон + оглушение)
+        if (entity.wet && entity.shocked) {
+            const bonusDmg = 10;
+            entity.hp -= bonusDmg;
+            entity.frozen = Math.max(entity.frozen || 0, 2);
+            entity.wet = 0;
+            entity.shocked = 0;
+            this.addLog(`⚡ КОМБО: Электрошок! ${entity.name} получает ${bonusDmg} доп. урона и оглушён!`);
+            if (entity.hp <= 0) {
+                this.addLog(`${entity.name} убит электрошоком!`);
+                this.player.xp += entity.xp;
+                this.checkLevelUp();
+                this.entities = this.entities.filter(e => e !== entity);
+            }
+            return;
+        }
+
+        // Заморозка + Огонь = Разрушение (бонусный урон + снятие заморозки)
+        if (entity.frozen && entity.burning) {
+            const bonusDmg = 15;
+            entity.hp -= bonusDmg;
+            entity.frozen = 0;
+            this.addLog(`💥 КОМБО: Термический шок! ${entity.name} получает ${bonusDmg} доп. урона!`);
+            if (entity.hp <= 0) {
+                this.addLog(`${entity.name} разрушен термическим шоком!`);
+                this.player.xp += entity.xp;
+                this.checkLevelUp();
+                this.entities = this.entities.filter(e => e !== entity);
+            }
+            return;
+        }
+
+        // Яд + Кислота = Токсичное облако (урон по области)
+        if (entity.poisoned && entity.acidBurn) {
+            entity.poisoned = 0;
+            entity.acidBurn = 0;
+            this.addLog(`☠ КОМБО: Токсичное облако вокруг ${entity.name}!`);
+
+            // Урон всем вокруг (включая врага)
+            for (const e of [...this.entities]) {
+                if (e === entity) continue;
+                const d = Math.sqrt((e.x - entity.x) ** 2 + (e.y - entity.y) ** 2);
+                if (d <= 2) {
+                    const toxicDmg = 8;
+                    e.hp -= toxicDmg;
+                    e.poisoned = 2;
+                    this.addLog(`${e.name} отравлен облаком! Урон: ${toxicDmg}`);
+                    if (e.hp <= 0) {
+                        this.addLog(`${e.name} погиб от токсинов!`);
+                        this.player.xp += e.xp;
+                        this.checkLevelUp();
+                        this.entities = this.entities.filter(ent => ent !== e);
+                    }
+                }
+            }
+            return;
+        }
+
+        // Горение + Горение на нескольких врагах рядом = Взрыв
+        if (entity.burning && entity.burning >= 2) {
+            const nearbyBurning = this.entities.filter(e =>
+                e !== entity && e.burning &&
+                Math.sqrt((e.x - entity.x) ** 2 + (e.y - entity.y) ** 2) <= 2
+            );
+
+            if (nearbyBurning.length >= 2) {
+                this.addLog(`🔥 КОМБО: Огненный вихрь!`);
+                const explosionDmg = 12;
+
+                for (const e of [...nearbyBurning, entity]) {
+                    e.hp -= explosionDmg;
+                    e.burning = 0; // Сгорает
+                    this.addLog(`${e.name} охвачен огненным вихрем! Урон: ${explosionDmg}`);
+                    if (e.hp <= 0) {
+                        this.addLog(`${e.name} сгорел!`);
+                        this.player.xp += e.xp;
+                        this.checkLevelUp();
+                        this.entities = this.entities.filter(ent => ent !== e);
+                    }
+                }
+            }
+        }
+
+        // Шок + Яд = Паралич (длительное оглушение)
+        if (entity.shocked && entity.poisoned) {
+            entity.frozen = Math.max(entity.frozen || 0, 3);
+            entity.shocked = 0;
+            this.addLog(`⚡☠ КОМБО: Нейротоксин парализует ${entity.name} на 3 хода!`);
+        }
+    }
+
+    handleSpecialSpell(spell, targetX, targetY) {
+        switch(spell.special) {
+            case 'heal':
+                const heal = Math.min(-spell.damage, this.player.maxHp - this.player.hp);
+                this.player.hp += heal;
+                this.addLog(`${spell.name}: восстановлено ${heal} HP`);
+                return true;
+
+            case 'fireAura':
+                this.player.fireAura = 5;
+                this.addLog('Вас окутывает пламя! Враги рядом будут гореть.');
+                return true;
+
+            case 'phoenix':
+                this.player.phoenixBuff = true;
+                this.addLog('Дух Феникса защищает вас! При смерти возродитесь.');
+                return true;
+
+            case 'trap':
+                this.traps = this.traps || [];
+                this.traps.push({ x: targetX, y: targetY, damage: spell.damage });
+                this.addLog(`Ловушка установлена в (${targetX}, ${targetY})`);
+                return true;
+
+            case 'stealth':
+                this.player.stealth = 5;
+                this.addLog('Вы сливаетесь с тенями. Враги вас не видят.');
+                return true;
+
+            case 'chain':
+                return this.castChainLightning(spell, targetX, targetY);
+
+            case 'drone':
+                this.player.droneActive = 10;
+                this.addLog('Дрон-разведчик запущен! Радиус обзора увеличен.');
+                return true;
+
+            case 'forceField':
+                this.player.shield = (this.player.shield || 0) + 40;
+                this.addLog(`Силовое поле активировано! Щит: ${this.player.shield}`);
+                return true;
+
+            case 'push':
+                return this.castTelekinesis(spell, targetX, targetY);
+
+            case 'foresight':
+                this.player.foresight = 5;
+                this.addLog('Вы видите ближайшее будущее! +30% уклонение.');
+                return true;
+
+            case 'control':
+                return this.castMindControl(spell, targetX, targetY);
+
+            case 'shield':
+                this.player.shield = (this.player.shield || 0) + (spell.shieldAmount || 30);
+                this.addLog(`Пси-щит активирован! Щит: ${this.player.shield}`);
+                return true;
+
+            case 'massControl':
+                let stunned = 0;
+                for (const entity of this.entities) {
+                    const d = Math.sqrt((entity.x - this.player.x) ** 2 + (entity.y - this.player.y) ** 2);
+                    if (d <= spell.area && !entity.isBoss) {
+                        entity.frozen = spell.effectDuration || 2;
+                        stunned++;
+                    }
+                }
+                this.addLog(`Массовый контроль оглушил ${stunned} врагов!`);
+                return true;
+
+            case 'mutate':
+                this.player.str += 3;
+                this.player.maxHp += 20;
+                this.player.hp += 20;
+                this.addLog('Ваше тело мутирует! +3 Сила, +20 HP');
+                return true;
+
+            case 'radAura':
+                for (const entity of this.entities) {
+                    const d = Math.sqrt((entity.x - this.player.x) ** 2 + (entity.y - this.player.y) ** 2);
+                    if (d <= spell.area) {
+                        let dmg = Math.floor(spell.damage * (100 - (entity.radRes || 0)) / 100);
+                        entity.hp -= dmg;
+                        if (dmg > 0) this.addLog(`Радиация поражает ${entity.name}! Урон: ${dmg}`);
+                    }
+                }
+                return true;
+
+            case 'split':
+                // Создаём клона
+                const cloneX = this.player.x + (Math.random() < 0.5 ? -1 : 1);
+                const cloneY = this.player.y + (Math.random() < 0.5 ? -1 : 1);
+                if (this.canMoveTo(cloneX, cloneY)) {
+                    this.entities.push({
+                        x: cloneX, y: cloneY,
+                        symbol: 'm', color: '#44ff44', name: 'Клон мутанта',
+                        hp: 30, maxHp: 30, damage: 8, armor: 0, str: 5,
+                        xp: 0, ai: 'aggressive', controlled: true, controlDuration: 10
+                    });
+                    this.addLog('Вы создали клона из собственной плоти!');
+                }
+                return true;
+
+            case 'emp':
+                return false; // Обрабатывается как обычный урон с бонусом
+
+            default:
+                return false;
+        }
+    }
+
+    castChainLightning(spell, targetX, targetY) {
+        const target = this.getEntityAt(targetX, targetY);
+        if (!target) {
+            this.addLog('Нет цели!');
+            return true;
+        }
+
+        let hits = [target];
+        let current = target;
+        const chainCount = spell.chainCount || 3;
+
+        // Наносим урон первой цели
+        this.applySpellDamage(current, spell);
+
+        // Цепляемся к ближайшим
+        for (let i = 1; i < chainCount; i++) {
+            let nearest = null;
+            let nearestDist = 5;
+
+            for (const entity of this.entities) {
+                if (hits.includes(entity) || entity.controlled) continue;
+                const d = Math.sqrt((entity.x - current.x) ** 2 + (entity.y - current.y) ** 2);
+                if (d < nearestDist) {
+                    nearest = entity;
+                    nearestDist = d;
+                }
+            }
+
+            if (nearest) {
+                hits.push(nearest);
+                const chainDmg = Math.floor(spell.damage * 0.7);
+                nearest.hp -= chainDmg;
+                this.addLog(`Молния перескакивает на ${nearest.name}! Урон: ${chainDmg}`);
+                if (nearest.hp <= 0) {
+                    this.addLog(`${nearest.name} повержен!`);
+                    this.player.xp += nearest.xp;
+                    this.entities = this.entities.filter(e => e !== nearest);
+                }
+                current = nearest;
+            }
+        }
+
+        return true;
+    }
+
+    castTelekinesis(spell, targetX, targetY) {
+        const target = this.getEntityAt(targetX, targetY);
+        if (!target) {
+            this.addLog('Нет цели!');
+            return true;
+        }
+
+        // Отталкиваем врага
+        const dx = target.x - this.player.x;
+        const dy = target.y - this.player.y;
+        const pushX = target.x + Math.sign(dx) * 2;
+        const pushY = target.y + Math.sign(dy) * 2;
+
+        if (this.canMoveTo(pushX, pushY)) {
+            target.x = pushX;
+            target.y = pushY;
+        }
+
+        // Наносим урон
+        this.applySpellDamage(target, spell);
+        this.addLog(`${target.name} отброшен телекинезом!`);
+
+        return true;
+    }
+
+    castMindControl(spell, targetX, targetY) {
+        const target = this.getEntityAt(targetX, targetY);
+        if (!target) {
+            this.addLog('Нет цели!');
+            return true;
+        }
+
+        if (target.isBoss) {
+            this.addLog(`${target.name} слишком силён для контроля!`);
+            return true;
+        }
+
+        target.controlled = true;
+        target.controlDuration = spell.controlDuration || 3;
+        target.color = '#aa44ff'; // Меняем цвет
+        this.addLog(`Вы взяли под контроль ${target.name}!`);
+
         return true;
     }
 
@@ -1304,6 +1678,69 @@ class Game {
             this.player.mana = Math.min(this.player.maxMana, this.player.mana + manaRegen);
         }
 
+        // === ОБРАБОТКА БАФФОВ ИГРОКА ===
+
+        // Огненная аура (Самовозгорание)
+        if (this.player.fireAura > 0) {
+            for (const entity of [...this.entities]) {
+                if (entity.controlled) continue;
+                const d = Math.sqrt((entity.x - this.player.x) ** 2 + (entity.y - this.player.y) ** 2);
+                if (d <= 2) {
+                    const auraDmg = 8;
+                    const finalDmg = Math.floor(auraDmg * (100 - (entity.fireRes || 0)) / 100);
+                    entity.hp -= finalDmg;
+                    entity.burning = Math.max(entity.burning || 0, 2);
+                    this.addLog(`Огненная аура обжигает ${entity.name}! Урон: ${finalDmg}`);
+                    if (entity.hp <= 0) {
+                        this.addLog(`${entity.name} сгорел от огненной ауры!`);
+                        this.player.xp += entity.xp;
+                        this.checkLevelUp();
+                        this.entities = this.entities.filter(e => e !== entity);
+                    }
+                }
+            }
+            this.player.fireAura--;
+            if (this.player.fireAura === 0) {
+                this.addLog('Огненная аура угасла.');
+            }
+        }
+
+        // Невидимость (Камуфляж)
+        if (this.player.stealth > 0) {
+            this.player.stealth--;
+            if (this.player.stealth === 0) {
+                this.addLog('Камуфляж исчез. Враги снова вас видят.');
+            }
+        }
+
+        // Предвидение
+        if (this.player.foresight > 0) {
+            this.player.foresight--;
+            if (this.player.foresight === 0) {
+                this.addLog('Предвидение закончилось.');
+            }
+        }
+
+        // Дрон-разведчик
+        if (this.player.droneActive > 0) {
+            this.player.droneActive--;
+            if (this.player.droneActive === 0) {
+                this.addLog('Дрон-разведчик вернулся.');
+            }
+        }
+
+        // Обработка подконтрольных существ
+        for (const entity of [...this.entities]) {
+            if (entity.controlled && entity.controlDuration !== undefined) {
+                entity.controlDuration--;
+                if (entity.controlDuration <= 0) {
+                    entity.controlled = false;
+                    entity.color = ENEMY_TEMPLATES[entity.templateId]?.color || '#ff4444';
+                    this.addLog(`${entity.name} освободился от контроля!`);
+                }
+            }
+        }
+
         // Ходы врагов
         for (const entity of [...this.entities]) {
             this.enemyTurn(entity);
@@ -1316,10 +1753,36 @@ class Game {
 
         // Проверка смерти
         if (this.player.hp <= 0) {
-            this.state = 'dead';
-            document.getElementById('death-screen').classList.remove('hidden');
-            document.getElementById('death-stats').textContent =
-                `Уровень: ${this.player.level} | Этаж: ${this.depth} | Ходов: ${this.turn} | Убито врагов: ${this.getKillCount()}`;
+            // Проверка баффа Феникса
+            if (this.player.phoenixBuff) {
+                this.player.phoenixBuff = false;
+                this.player.hp = Math.floor(this.player.maxHp * 0.5);
+                this.player.mana = Math.floor(this.player.maxMana * 0.5);
+                this.addLog('🔥 ФЕНИКС ВОЗРОЖДАЕТ ВАС! HP и Мана восстановлены на 50%!');
+
+                // Огненный взрыв при возрождении
+                for (const entity of [...this.entities]) {
+                    if (entity.controlled) continue;
+                    const d = Math.sqrt((entity.x - this.player.x) ** 2 + (entity.y - this.player.y) ** 2);
+                    if (d <= 3) {
+                        const phoenixDmg = 30;
+                        const finalDmg = Math.floor(phoenixDmg * (100 - (entity.fireRes || 0)) / 100);
+                        entity.hp -= finalDmg;
+                        entity.burning = 3;
+                        this.addLog(`Пламя феникса поражает ${entity.name}! Урон: ${finalDmg}`);
+                        if (entity.hp <= 0) {
+                            this.addLog(`${entity.name} сгорел в пламени феникса!`);
+                            this.player.xp += entity.xp;
+                            this.entities = this.entities.filter(e => e !== entity);
+                        }
+                    }
+                }
+            } else {
+                this.state = 'dead';
+                document.getElementById('death-screen').classList.remove('hidden');
+                document.getElementById('death-stats').textContent =
+                    `Уровень: ${this.player.level} | Этаж: ${this.depth} | Ходов: ${this.turn} | Убито врагов: ${this.getKillCount()}`;
+            }
         }
 
         this.computeFOV();
@@ -1335,12 +1798,24 @@ class Game {
     enemyTurn(entity) {
         if (entity.hp <= 0) return;
 
-        // Обработка эффектов
+        // === ОБРАБОТКА ЭФФЕКТОВ ===
+
+        // Замороженный враг пропускает ход
         if (entity.frozen && entity.frozen > 0) {
             entity.frozen--;
-            return; // Замороженный враг пропускает ход
+            return;
         }
 
+        // Шок - шанс пропустить ход
+        if (entity.shocked && entity.shocked > 0) {
+            entity.shocked--;
+            if (Math.random() < 0.5) {
+                this.addLog(`${entity.name} парализован шоком!`);
+                return;
+            }
+        }
+
+        // Горение
         if (entity.burning && entity.burning > 0) {
             const burnDmg = 5;
             entity.hp -= burnDmg;
@@ -1355,10 +1830,52 @@ class Game {
             }
         }
 
+        // Отравление
+        if (entity.poisoned && entity.poisoned > 0) {
+            const poisonDmg = 3;
+            entity.hp -= poisonDmg;
+            this.addLog(`${entity.name} отравлен! Урон: ${poisonDmg}`);
+            entity.poisoned--;
+            if (entity.hp <= 0) {
+                this.addLog(`${entity.name} умер от яда!`);
+                this.player.xp += entity.xp;
+                this.checkLevelUp();
+                this.entities = this.entities.filter(e => e !== entity);
+                return;
+            }
+        }
+
+        // Кислота
+        if (entity.acidBurn && entity.acidBurn > 0) {
+            const acidDmg = 4;
+            entity.hp -= acidDmg;
+            this.addLog(`${entity.name} разъедает кислота! Урон: ${acidDmg}`);
+            entity.acidBurn--;
+            if (entity.hp <= 0) {
+                this.addLog(`${entity.name} растворился в кислоте!`);
+                this.player.xp += entity.xp;
+                this.checkLevelUp();
+                this.entities = this.entities.filter(e => e !== entity);
+                return;
+            }
+        }
+
+        // === ПОДКОНТРОЛЬНЫЕ СУЩЕСТВА ===
+        if (entity.controlled) {
+            this.controlledEntityTurn(entity);
+            return;
+        }
+
         const dist = Math.sqrt((entity.x - this.player.x) ** 2 + (entity.y - this.player.y) ** 2);
 
-        // Проверка видимости игрока
-        const canSeePlayer = this.map[entity.x][entity.y].visible;
+        // Проверка видимости игрока (с учётом стелса)
+        let canSeePlayer = this.map[entity.x][entity.y].visible;
+
+        // Если игрок в стелсе - враги его не видят (если не рядом)
+        if (this.player.stealth > 0 && dist > 1.5) {
+            canSeePlayer = false;
+            entity.alerted = false; // Теряют тревогу
+        }
 
         if (!canSeePlayer && !entity.alerted) {
             // Случайное блуждание
@@ -1392,7 +1909,7 @@ class Game {
         let packDamageBonus = 0;
         if (entity.packBonus) {
             const nearbyAllies = this.entities.filter(e =>
-                e !== entity && e.packBonus &&
+                e !== entity && e.packBonus && !e.controlled &&
                 Math.sqrt((e.x - entity.x) ** 2 + (e.y - entity.y) ** 2) <= 3
             ).length;
             packDamageBonus = nearbyAllies * 2;
@@ -1401,7 +1918,7 @@ class Game {
         // Аура лидера (Альфа-гуль)
         if (entity.ai === 'leader' && entity.auraRange > 0) {
             for (const ally of this.entities) {
-                if (ally !== entity && Math.sqrt((ally.x - entity.x) ** 2 + (ally.y - entity.y) ** 2) <= entity.auraRange) {
+                if (ally !== entity && !ally.controlled && Math.sqrt((ally.x - entity.x) ** 2 + (ally.y - entity.y) ** 2) <= entity.auraRange) {
                     ally.auraBuff = entity.auraBonus;
                 }
             }
@@ -1455,14 +1972,54 @@ class Game {
         }
     }
 
+    // Ход подконтрольного существа - атакует других врагов
+    controlledEntityTurn(entity) {
+        // Ищем ближайшего неподконтрольного врага
+        let nearestEnemy = null;
+        let nearestDist = Infinity;
+
+        for (const e of this.entities) {
+            if (e === entity || e.controlled) continue;
+            const d = Math.sqrt((e.x - entity.x) ** 2 + (e.y - entity.y) ** 2);
+            if (d < nearestDist) {
+                nearestDist = d;
+                nearestEnemy = e;
+            }
+        }
+
+        if (!nearestEnemy) {
+            // Нет врагов - следуем за игроком
+            if (Math.sqrt((entity.x - this.player.x) ** 2 + (entity.y - this.player.y) ** 2) > 2) {
+                this.moveEntityToward(entity, this.player.x, this.player.y);
+            }
+            return;
+        }
+
+        // Атакуем ближайшего врага
+        if (nearestDist <= 1.5) {
+            let dmg = entity.damage + Math.floor((entity.str || 0) / 2);
+            dmg = Math.max(1, dmg - (nearestEnemy.armor || 0));
+            nearestEnemy.hp -= dmg;
+            this.addLog(`${entity.name} атакует ${nearestEnemy.name}! Урон: ${dmg}`);
+
+            if (nearestEnemy.hp <= 0) {
+                this.addLog(`${nearestEnemy.name} повержен союзником!`);
+                this.player.xp += nearestEnemy.xp;
+                this.checkLevelUp();
+                this.entities = this.entities.filter(e => e !== nearestEnemy);
+            }
+        } else {
+            // Идём к врагу
+            this.moveEntityToward(entity, nearestEnemy.x, nearestEnemy.y);
+        }
+    }
+
     aiSniper(entity, dist) {
         const preferredDist = entity.preferredDist || 8;
 
         // Снайпер стреляет издалека
         if (dist >= 4 && dist <= 10) {
-            const dmg = Math.max(1, entity.damage - this.player.armor);
-            this.player.hp -= dmg;
-            this.addLog(`${entity.name} стреляет издалека! Урон: ${dmg}`);
+            this.rangedAttack(entity, entity.damage, `${entity.name} стреляет издалека!`);
         } else if (dist < preferredDist - 2) {
             // Слишком близко - отступаем
             this.moveEntityAway(entity);
@@ -1478,10 +2035,9 @@ class Game {
             const spell = entity.spells[0];
             if (dist <= spell.range) {
                 entity.mana -= spell.cost;
-                let dmg = spell.damage + packBonus;
-                if (spell.type === 'FIRE') dmg = Math.floor(dmg * (100 - this.player.fireRes) / 100);
-                this.player.hp -= dmg;
-                this.addLog(`${entity.name} использует ${spell.name}! Урон: ${dmg}`);
+                let baseDmg = spell.damage + packBonus;
+                if (spell.type === 'FIRE') baseDmg = Math.floor(baseDmg * (100 - this.player.fireRes) / 100);
+                this.rangedAttack(entity, baseDmg, `${entity.name} использует ${spell.name}!`);
                 return;
             }
         }
@@ -1495,10 +2051,57 @@ class Game {
     }
 
     meleeAttack(entity, bonusDamage = 0) {
+        // Проверка уклонения (Предвидение)
+        if (this.player.foresight > 0 && Math.random() < 0.3) {
+            this.addLog(`Предвидение! Вы уклонились от атаки ${entity.name}!`);
+            return;
+        }
+
         let dmg = entity.damage + Math.floor(entity.str / 2) + bonusDamage + (entity.auraBuff || 0);
         dmg = Math.max(1, dmg - this.player.armor);
+
+        // Проверка щита
+        if (this.player.shield > 0) {
+            if (this.player.shield >= dmg) {
+                this.player.shield -= dmg;
+                this.addLog(`Щит поглотил ${dmg} урона от ${entity.name}! Осталось: ${this.player.shield}`);
+                return;
+            } else {
+                dmg -= this.player.shield;
+                this.addLog(`Щит поглотил ${this.player.shield} урона и разрушен!`);
+                this.player.shield = 0;
+            }
+        }
+
         this.player.hp -= dmg;
         this.addLog(`${entity.name} атакует! Урон: ${dmg}`);
+    }
+
+    // Дальняя атака с учётом щита и уклонения
+    rangedAttack(entity, baseDamage, message) {
+        // Проверка уклонения (Предвидение)
+        if (this.player.foresight > 0 && Math.random() < 0.3) {
+            this.addLog(`Предвидение! Вы уклонились от выстрела ${entity.name}!`);
+            return;
+        }
+
+        let dmg = Math.max(1, baseDamage - this.player.armor);
+
+        // Проверка щита
+        if (this.player.shield > 0) {
+            if (this.player.shield >= dmg) {
+                this.player.shield -= dmg;
+                this.addLog(`Щит поглотил ${dmg} урона! Осталось: ${this.player.shield}`);
+                return;
+            } else {
+                dmg -= this.player.shield;
+                this.addLog(`Щит поглотил ${this.player.shield} урона и разрушен!`);
+                this.player.shield = 0;
+            }
+        }
+
+        this.player.hp -= dmg;
+        this.addLog(`${message} Урон: ${dmg}`);
     }
 
     moveEntityToward(entity, targetX, targetY) {
@@ -1514,10 +2117,32 @@ class Game {
             if (this.canMoveTo(nx, ny)) {
                 entity.x = nx;
                 entity.y = ny;
+                // Проверка ловушек
+                this.checkTrap(entity);
                 return true;
             }
         }
         return false;
+    }
+
+    // Проверка ловушки при движении
+    checkTrap(entity) {
+        if (!this.traps || entity.controlled) return;
+
+        const trapIndex = this.traps.findIndex(t => t.x === entity.x && t.y === entity.y);
+        if (trapIndex !== -1) {
+            const trap = this.traps[trapIndex];
+            entity.hp -= trap.damage;
+            this.addLog(`${entity.name} попал в ловушку! Урон: ${trap.damage}`);
+            this.traps.splice(trapIndex, 1);
+
+            if (entity.hp <= 0) {
+                this.addLog(`${entity.name} убит ловушкой!`);
+                this.player.xp += entity.xp;
+                this.checkLevelUp();
+                this.entities = this.entities.filter(e => e !== entity);
+            }
+        }
     }
 
     moveEntityAway(entity) {

@@ -206,7 +206,7 @@
 </head>
 <body>
     <h1>☢ ПЕПЕЛ ЦИВИЛИЗАЦИИ ☢</h1>
-    <p class="subtitle">Постапокалиптический рогалик | 2077 год, после Великой Войны | v0.0.2</p>
+    <p class="subtitle">Постапокалиптический рогалик | 2077 год, после Великой Войны | v0.0.3</p>
 
     <div class="death-screen hidden" id="death-screen">
         <h2>ВЫ ПОГИБЛИ</h2>
@@ -342,13 +342,31 @@ const CHARACTER_CLASSES = {
 
 // ==================== ВРАГИ ====================
 const ENEMY_TEMPLATES = {
-    raider: { name: 'Рейдер', symbol: 'r', color: '#ff4444', hp: 15, str: 4, damage: 3, armor: 0, xp: 15, ai: 'aggressive' },
-    mutant_dog: { name: 'Пёс-мутант', symbol: 'd', color: '#884400', hp: 10, str: 3, damage: 4, armor: 0, xp: 10, ai: 'aggressive', radRes: 50 },
-    ghoul: { name: 'Гуль', symbol: 'g', color: '#00aa00', hp: 20, str: 5, damage: 5, armor: 0, xp: 20, ai: 'aggressive', radRes: 100 },
+    // Базовые враги
+    raider: { name: 'Рейдер', symbol: 'r', color: '#ff4444', hp: 15, str: 4, damage: 3, armor: 0, xp: 15, ai: 'aggressive', fleeThreshold: 0.2 },
+    mutant_dog: { name: 'Пёс-мутант', symbol: 'd', color: '#884400', hp: 10, str: 3, damage: 4, armor: 0, xp: 10, ai: 'aggressive', radRes: 50, speed: 2 },
+    ghoul: { name: 'Гуль', symbol: 'g', color: '#00aa00', hp: 20, str: 5, damage: 5, armor: 0, xp: 20, ai: 'aggressive', radRes: 100, packBonus: true },
     robot: { name: 'Робот-охранник', symbol: 'R', color: '#4444ff', hp: 25, str: 6, damage: 8, armor: 3, xp: 30, ai: 'patrol', fireRes: 30 },
+
+    // Кастеры
     pyromancer: { name: 'Дикий пиромант', symbol: 'P', color: '#ff8800', hp: 18, str: 3, damage: 2, armor: 0, xp: 40, ai: 'caster', fireRes: 75,
-        spells: [{ name: 'Огненный шар', cost: 15, damage: 20, type: 'FIRE', range: 5, area: 1 }], mana: 50 },
-    deathclaw: { name: 'Коготь смерти', symbol: 'D', color: '#660000', hp: 50, str: 12, damage: 15, armor: 5, xp: 100, ai: 'aggressive', radRes: 80 }
+        spells: [{ name: 'Огненный шар', cost: 15, damage: 20, type: 'FIRE', range: 5, area: 1 }], mana: 50, fleeThreshold: 0.3 },
+
+    // Элитные враги
+    deathclaw: { name: 'Коготь смерти', symbol: 'D', color: '#660000', hp: 50, str: 12, damage: 15, armor: 5, xp: 100, ai: 'aggressive', radRes: 80 },
+
+    // Новые враги v0.0.3
+    sniper: { name: 'Снайпер-рейдер', symbol: 's', color: '#ffaa00', hp: 12, str: 3, damage: 12, armor: 0, xp: 25, ai: 'sniper',
+        preferredDist: 8, fleeThreshold: 0.25 },
+    runner: { name: 'Мутант-бегун', symbol: 'u', color: '#ff00ff', hp: 8, str: 2, damage: 6, armor: 0, xp: 12, ai: 'aggressive',
+        speed: 2, radRes: 40 },
+    alpha_ghoul: { name: 'Альфа-гуль', symbol: 'G', color: '#00ff00', hp: 35, str: 7, damage: 8, armor: 2, xp: 50, ai: 'leader',
+        radRes: 100, auraRange: 3, auraBonus: 2 },
+    heavy_robot: { name: 'Боевой робот', symbol: 'B', color: '#0000ff', hp: 60, str: 10, damage: 12, armor: 8, xp: 80, ai: 'aggressive',
+        fireRes: 50, speed: 0.5 },
+    bunker_guardian: { name: 'Страж бункера', symbol: 'S', color: '#ffff00', hp: 80, str: 14, damage: 18, armor: 6, xp: 150, ai: 'boss',
+        fireRes: 30, radRes: 50, isBoss: true,
+        spells: [{ name: 'Плазменный залп', cost: 20, damage: 25, type: 'FIRE', range: 6, area: 2 }], mana: 80 }
 };
 
 // ==================== СИСТЕМА РЕДКОСТИ ====================
@@ -706,10 +724,26 @@ class Game {
     }
 
     spawnEnemies(rooms) {
-        const count = 3 + this.depth * 2;
+        const count = 4 + this.depth * 2;
         const types = ['raider', 'mutant_dog', 'ghoul', 'robot'];
-        if (this.depth >= 3) types.push('pyromancer');
+
+        // Новые враги по уровням
+        if (this.depth >= 2) types.push('sniper', 'runner');
+        if (this.depth >= 3) types.push('pyromancer', 'alpha_ghoul');
+        if (this.depth >= 4) types.push('heavy_robot');
         if (this.depth >= 5) types.push('deathclaw');
+
+        // Босс на каждом 5-м этаже
+        if (this.depth % 5 === 0 && rooms.length > 0) {
+            const bossRoom = rooms[rooms.length - 1];
+            const bx = bossRoom.x + Math.floor(bossRoom.w / 2);
+            const by = bossRoom.y + Math.floor(bossRoom.h / 2);
+            if (this.map[bx][by].walkable) {
+                const template = ENEMY_TEMPLATES.bunker_guardian;
+                this.entities.push(this.createEnemy(template, bx, by));
+                this.addLog('Вы чувствуете мощное присутствие...');
+            }
+        }
 
         for (let i = 0; i < count; i++) {
             const room = rooms[Math.floor(Math.random() * rooms.length)];
@@ -719,26 +753,40 @@ class Game {
             if (this.map[x][y].walkable && !this.getEntityAt(x, y) && (x !== this.player.x || y !== this.player.y)) {
                 const type = types[Math.floor(Math.random() * types.length)];
                 const template = ENEMY_TEMPLATES[type];
-                this.entities.push({
-                    x, y,
-                    symbol: template.symbol,
-                    color: template.color,
-                    name: template.name,
-                    hp: template.hp + this.depth * 3,
-                    maxHp: template.hp + this.depth * 3,
-                    mana: template.mana || 0,
-                    maxMana: template.mana || 0,
-                    str: template.str + this.depth,
-                    damage: template.damage + this.depth,
-                    armor: template.armor + Math.floor(this.depth / 2),
-                    xp: template.xp + this.depth * 5,
-                    ai: template.ai,
-                    fireRes: template.fireRes || 0,
-                    radRes: template.radRes || 0,
-                    spells: template.spells ? template.spells.map(s => ({...s})) : []
-                });
+                this.entities.push(this.createEnemy(template, x, y));
             }
         }
+    }
+
+    createEnemy(template, x, y) {
+        return {
+            x, y,
+            symbol: template.symbol,
+            color: template.color,
+            name: template.name,
+            hp: template.hp + this.depth * 3,
+            maxHp: template.hp + this.depth * 3,
+            mana: template.mana || 0,
+            maxMana: template.mana || 0,
+            str: template.str + this.depth,
+            damage: template.damage + this.depth,
+            armor: template.armor + Math.floor(this.depth / 2),
+            xp: template.xp + this.depth * 5,
+            ai: template.ai,
+            fireRes: template.fireRes || 0,
+            radRes: template.radRes || 0,
+            spells: template.spells ? template.spells.map(s => ({...s})) : [],
+            // Новые свойства AI
+            fleeThreshold: template.fleeThreshold || 0,
+            speed: template.speed || 1,
+            preferredDist: template.preferredDist || 0,
+            packBonus: template.packBonus || false,
+            auraRange: template.auraRange || 0,
+            auraBonus: template.auraBonus || 0,
+            isBoss: template.isBoss || false,
+            alerted: false,
+            fleeing: false
+        };
     }
 
     computeFOV() {
@@ -1224,9 +1272,36 @@ class Game {
             if (spell.currentCooldown > 0) spell.currentCooldown--;
         }
 
+        // Обработка временных эффектов игрока
+        for (let i = this.player.effects.length - 1; i >= 0; i--) {
+            const effect = this.player.effects[i];
+            effect.duration--;
+            if (effect.duration <= 0) {
+                // Снимаем бонус
+                if (effect.type === 'str') this.player.str -= effect.bonus;
+                if (effect.type === 'int') this.player.int -= effect.bonus;
+                this.addLog(`Эффект ${effect.type === 'str' ? 'силы' : 'интеллекта'} закончился.`);
+                this.player.effects.splice(i, 1);
+            }
+        }
+
         // Регенерация маны
         if (this.turn % 3 === 0) {
             this.player.mana = Math.min(this.player.maxMana, this.player.mana + 1);
+        }
+
+        // Регенерация HP от артефактов
+        const hpRegen = this.player.inventory.reduce((sum, item) =>
+            sum + (item.active && item.hpRegen ? item.hpRegen : 0), 0);
+        if (hpRegen > 0 && this.turn % 2 === 0) {
+            this.player.hp = Math.min(this.player.maxHp, this.player.hp + hpRegen);
+        }
+
+        // Регенерация маны от артефактов
+        const manaRegen = this.player.inventory.reduce((sum, item) =>
+            sum + (item.active && item.manaRegen ? item.manaRegen : 0), 0);
+        if (manaRegen > 0 && this.turn % 2 === 0) {
+            this.player.mana = Math.min(this.player.maxMana, this.player.mana + manaRegen);
         }
 
         // Ходы врагов
@@ -1234,45 +1309,176 @@ class Game {
             this.enemyTurn(entity);
         }
 
+        // Сброс аура-баффов врагов
+        for (const entity of this.entities) {
+            entity.auraBuff = 0;
+        }
+
         // Проверка смерти
         if (this.player.hp <= 0) {
             this.state = 'dead';
             document.getElementById('death-screen').classList.remove('hidden');
             document.getElementById('death-stats').textContent =
-                `Уровень: ${this.player.level} | Этаж: ${this.depth} | Ходов: ${this.turn}`;
+                `Уровень: ${this.player.level} | Этаж: ${this.depth} | Ходов: ${this.turn} | Убито врагов: ${this.getKillCount()}`;
         }
 
         this.computeFOV();
         this.render();
     }
 
+    getKillCount() {
+        // Подсчёт убитых врагов по опыту
+        const baseXp = this.player.xp + (this.player.level - 1) * 100;
+        return Math.floor(baseXp / 20);
+    }
+
     enemyTurn(entity) {
         if (entity.hp <= 0) return;
 
+        // Обработка эффектов
+        if (entity.frozen && entity.frozen > 0) {
+            entity.frozen--;
+            return; // Замороженный враг пропускает ход
+        }
+
+        if (entity.burning && entity.burning > 0) {
+            const burnDmg = 5;
+            entity.hp -= burnDmg;
+            this.addLog(`${entity.name} горит! Урон: ${burnDmg}`);
+            entity.burning--;
+            if (entity.hp <= 0) {
+                this.addLog(`${entity.name} сгорел!`);
+                this.player.xp += entity.xp;
+                this.checkLevelUp();
+                this.entities = this.entities.filter(e => e !== entity);
+                return;
+            }
+        }
+
         const dist = Math.sqrt((entity.x - this.player.x) ** 2 + (entity.y - this.player.y) ** 2);
 
-        // Только если видит игрока
-        if (!this.map[entity.x][entity.y].visible) {
+        // Проверка видимости игрока
+        const canSeePlayer = this.map[entity.x][entity.y].visible;
+
+        if (!canSeePlayer && !entity.alerted) {
+            // Случайное блуждание
             if (Math.random() < 0.3) {
-                const dx = [-1, 0, 1][Math.floor(Math.random() * 3)];
-                const dy = [-1, 0, 1][Math.floor(Math.random() * 3)];
-                const nx = entity.x + dx;
-                const ny = entity.y + dy;
-                if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT &&
-                    this.map[nx][ny].walkable && !this.getEntityAt(nx, ny)) {
-                    entity.x = nx;
-                    entity.y = ny;
-                }
+                this.moveEntityRandom(entity);
             }
             return;
         }
 
-        // Кастеры
-        if (entity.ai === 'caster' && entity.spells && entity.spells.length > 0 && entity.mana >= entity.spells[0].cost) {
+        // Если видит игрока - становится в тревогу
+        if (canSeePlayer) {
+            entity.alerted = true;
+        }
+
+        // Проверка на отступление (низкое HP)
+        const hpPercent = entity.hp / entity.maxHp;
+        if (entity.fleeThreshold > 0 && hpPercent <= entity.fleeThreshold && !entity.isBoss) {
+            entity.fleeing = true;
+        }
+
+        // Отступление
+        if (entity.fleeing) {
+            this.moveEntityAway(entity);
+            if (Math.random() < 0.1) {
+                this.addLog(`${entity.name} пытается сбежать!`);
+            }
+            return;
+        }
+
+        // Расчёт бонуса от стаи (для гулей и лидеров)
+        let packDamageBonus = 0;
+        if (entity.packBonus) {
+            const nearbyAllies = this.entities.filter(e =>
+                e !== entity && e.packBonus &&
+                Math.sqrt((e.x - entity.x) ** 2 + (e.y - entity.y) ** 2) <= 3
+            ).length;
+            packDamageBonus = nearbyAllies * 2;
+        }
+
+        // Аура лидера (Альфа-гуль)
+        if (entity.ai === 'leader' && entity.auraRange > 0) {
+            for (const ally of this.entities) {
+                if (ally !== entity && Math.sqrt((ally.x - entity.x) ** 2 + (ally.y - entity.y) ** 2) <= entity.auraRange) {
+                    ally.auraBuff = entity.auraBonus;
+                }
+            }
+        }
+
+        // AI по типу
+        switch (entity.ai) {
+            case 'sniper':
+                this.aiSniper(entity, dist);
+                break;
+
+            case 'caster':
+            case 'boss':
+                this.aiCaster(entity, dist, packDamageBonus);
+                break;
+
+            case 'leader':
+                // Лидеры атакуют но держатся позади
+                if (dist <= 1.5) {
+                    this.meleeAttack(entity, packDamageBonus);
+                } else if (dist < 4) {
+                    this.moveEntityToward(entity, this.player.x, this.player.y);
+                }
+                break;
+
+            case 'patrol':
+                // Роботы патрулируют и атакуют только если видят
+                if (canSeePlayer) {
+                    if (dist <= 1.5) {
+                        this.meleeAttack(entity, packDamageBonus);
+                    } else {
+                        this.moveEntityToward(entity, this.player.x, this.player.y);
+                    }
+                }
+                break;
+
+            case 'aggressive':
+            default:
+                // Быстрые враги делают 2 шага
+                const moves = entity.speed || 1;
+                for (let m = 0; m < moves; m++) {
+                    const currentDist = Math.sqrt((entity.x - this.player.x) ** 2 + (entity.y - this.player.y) ** 2);
+                    if (currentDist <= 1.5) {
+                        this.meleeAttack(entity, packDamageBonus);
+                        break;
+                    } else {
+                        this.moveEntityToward(entity, this.player.x, this.player.y);
+                    }
+                }
+                break;
+        }
+    }
+
+    aiSniper(entity, dist) {
+        const preferredDist = entity.preferredDist || 8;
+
+        // Снайпер стреляет издалека
+        if (dist >= 4 && dist <= 10) {
+            const dmg = Math.max(1, entity.damage - this.player.armor);
+            this.player.hp -= dmg;
+            this.addLog(`${entity.name} стреляет издалека! Урон: ${dmg}`);
+        } else if (dist < preferredDist - 2) {
+            // Слишком близко - отступаем
+            this.moveEntityAway(entity);
+        } else if (dist > preferredDist + 2) {
+            // Слишком далеко - подходим
+            this.moveEntityToward(entity, this.player.x, this.player.y);
+        }
+    }
+
+    aiCaster(entity, dist, packBonus) {
+        // Пытаемся кастовать
+        if (entity.spells && entity.spells.length > 0 && entity.mana >= entity.spells[0].cost) {
             const spell = entity.spells[0];
             if (dist <= spell.range) {
                 entity.mana -= spell.cost;
-                let dmg = spell.damage;
+                let dmg = spell.damage + packBonus;
                 if (spell.type === 'FIRE') dmg = Math.floor(dmg * (100 - this.player.fireRes) / 100);
                 this.player.hp -= dmg;
                 this.addLog(`${entity.name} использует ${spell.name}! Урон: ${dmg}`);
@@ -1280,25 +1486,73 @@ class Game {
             }
         }
 
-        // Ближний бой или движение
+        // Если нет маны или далеко - идём к игроку
         if (dist <= 1.5) {
-            const dmg = Math.max(1, entity.damage + Math.floor(entity.str / 2) - this.player.armor);
-            this.player.hp -= dmg;
-            this.addLog(`${entity.name} атакует! Урон: ${dmg}`);
-        } else if (entity.ai === 'aggressive' || entity.ai === 'caster') {
-            const dx = this.player.x > entity.x ? 1 : (this.player.x < entity.x ? -1 : 0);
-            const dy = this.player.y > entity.y ? 1 : (this.player.y < entity.y ? -1 : 0);
+            this.meleeAttack(entity, packBonus);
+        } else {
+            this.moveEntityToward(entity, this.player.x, this.player.y);
+        }
+    }
 
-            const nx = entity.x + dx;
-            const ny = entity.y + dy;
+    meleeAttack(entity, bonusDamage = 0) {
+        let dmg = entity.damage + Math.floor(entity.str / 2) + bonusDamage + (entity.auraBuff || 0);
+        dmg = Math.max(1, dmg - this.player.armor);
+        this.player.hp -= dmg;
+        this.addLog(`${entity.name} атакует! Урон: ${dmg}`);
+    }
 
-            if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT &&
-                this.map[nx][ny].walkable && !this.getEntityAt(nx, ny) &&
-                !(nx === this.player.x && ny === this.player.y)) {
+    moveEntityToward(entity, targetX, targetY) {
+        const dx = targetX > entity.x ? 1 : (targetX < entity.x ? -1 : 0);
+        const dy = targetY > entity.y ? 1 : (targetY < entity.y ? -1 : 0);
+
+        // Пробуем диагональ, потом прямо
+        const moves = [[dx, dy], [dx, 0], [0, dy]];
+        for (const [mx, my] of moves) {
+            if (mx === 0 && my === 0) continue;
+            const nx = entity.x + mx;
+            const ny = entity.y + my;
+            if (this.canMoveTo(nx, ny)) {
                 entity.x = nx;
                 entity.y = ny;
+                return true;
             }
         }
+        return false;
+    }
+
+    moveEntityAway(entity) {
+        const dx = this.player.x > entity.x ? -1 : (this.player.x < entity.x ? 1 : 0);
+        const dy = this.player.y > entity.y ? -1 : (this.player.y < entity.y ? 1 : 0);
+
+        const moves = [[dx, dy], [dx, 0], [0, dy], [-dx, dy], [dx, -dy]];
+        for (const [mx, my] of moves) {
+            if (mx === 0 && my === 0) continue;
+            const nx = entity.x + mx;
+            const ny = entity.y + my;
+            if (this.canMoveTo(nx, ny)) {
+                entity.x = nx;
+                entity.y = ny;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    moveEntityRandom(entity) {
+        const dx = [-1, 0, 1][Math.floor(Math.random() * 3)];
+        const dy = [-1, 0, 1][Math.floor(Math.random() * 3)];
+        const nx = entity.x + dx;
+        const ny = entity.y + dy;
+        if (this.canMoveTo(nx, ny)) {
+            entity.x = nx;
+            entity.y = ny;
+        }
+    }
+
+    canMoveTo(x, y) {
+        return x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT &&
+            this.map[x][y].walkable && !this.getEntityAt(x, y) &&
+            !(x === this.player.x && y === this.player.y);
     }
 
     render() {

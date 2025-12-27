@@ -8,87 +8,84 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: #0a0a0f;
             color: #e0e0e0;
             font-family: 'Courier New', monospace;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 20px;
+            overflow: hidden;
         }
 
         h1 {
             color: #ff6b35;
             text-shadow: 0 0 20px #ff6b35, 0 0 40px #ff4500;
-            margin-bottom: 10px;
-            font-size: 2.2em;
+            margin: 5px 0;
+            font-size: 1.5em;
             text-align: center;
         }
 
-        .subtitle { color: #888; margin-bottom: 20px; text-align: center; }
+        .subtitle { color: #888; margin-bottom: 5px; text-align: center; font-size: 0.9em; }
 
-        .container {
+        .game-wrapper {
             display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 1400px;
+            flex: 1;
+            overflow: hidden;
+            padding: 5px;
+            gap: 10px;
         }
 
         #game-container {
-            background: #0a0a0a;
-            border: 2px solid #444;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            min-width: 0;
         }
 
-        #game-display {
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.1;
-            white-space: pre;
-            background: #000;
-            padding: 10px;
-            border-radius: 5px;
-            min-width: 560px;
-            min-height: 300px;
-            overflow: hidden;
+        #game-canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
         }
 
         .sidebar {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            min-width: 300px;
-            max-width: 350px;
+            gap: 8px;
+            width: 280px;
+            min-width: 280px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
         }
 
         .panel {
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid #444;
-            border-radius: 10px;
-            padding: 15px;
+            background: rgba(10, 10, 20, 0.9);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
         }
 
         .panel h2 {
             color: #ff6b35;
-            margin-bottom: 10px;
-            font-size: 1.1em;
+            margin-bottom: 8px;
+            font-size: 1em;
             border-bottom: 1px solid #333;
-            padding-bottom: 5px;
+            padding-bottom: 4px;
         }
 
-        .bar { height: 18px; background: #222; border-radius: 10px; overflow: hidden; margin: 5px 0; }
+        .bar { height: 14px; background: #222; border-radius: 7px; overflow: hidden; margin: 4px 0; }
         .bar-fill { height: 100%; transition: width 0.3s ease; }
-        .hp-bar { background: linear-gradient(90deg, #ff0000, #ff4444); }
-        .mana-bar { background: linear-gradient(90deg, #0066ff, #4488ff); }
-        .xp-bar { background: linear-gradient(90deg, #ffaa00, #ffcc00); }
-        .stat-label { display: flex; justify-content: space-between; font-size: 12px; }
+        .hp-bar { background: linear-gradient(90deg, #cc0000, #ff3333); }
+        .mana-bar { background: linear-gradient(90deg, #0055cc, #3377ff); }
+        .xp-bar { background: linear-gradient(90deg, #cc8800, #ffaa00); }
+        .stat-label { display: flex; justify-content: space-between; font-size: 11px; }
 
-        #log-display { height: 120px; overflow-y: auto; font-size: 11px; line-height: 1.4; }
-        #log-display p { margin: 2px 0; padding: 2px 5px; border-left: 2px solid #444; }
+        #log-display { height: 100px; overflow-y: auto; font-size: 10px; line-height: 1.3; }
+        #log-display p { margin: 2px 0; padding: 2px 4px; border-left: 2px solid #333; }
         #log-display p:last-child { border-left-color: #ff6b35; background: rgba(255, 107, 53, 0.1); }
 
         #class-select { text-align: center; padding: 30px; }
@@ -198,15 +195,35 @@
         }
 
         @media (max-width: 900px) {
-            #game-display { font-size: 9px; min-width: auto; }
-            .container { flex-direction: column; }
-            .sidebar { width: 100%; max-width: 100%; }
+            .game-wrapper { flex-direction: column; }
+            .sidebar { width: 100%; min-width: auto; max-height: 200px; flex-direction: row; flex-wrap: wrap; }
+            .panel { flex: 1; min-width: 140px; }
+            h1 { font-size: 1.2em; }
         }
+
+        .controls-mini {
+            display: flex;
+            gap: 2px;
+            justify-content: center;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+        .controls-mini button {
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .controls-mini button:hover { background: #ff6b35; }
     </style>
 </head>
 <body>
     <h1>☢ ПЕПЕЛ ЦИВИЛИЗАЦИИ ☢</h1>
-    <p class="subtitle">Постапокалиптический рогалик | 2077 год, после Великой Войны | v0.0.4</p>
+    <p class="subtitle">Постапокалиптический рогалик | 2077 год | v0.4.1</p>
 
     <div class="death-screen hidden" id="death-screen">
         <h2>ВЫ ПОГИБЛИ</h2>
@@ -227,30 +244,29 @@
         <div class="class-grid" id="class-grid"></div>
     </div>
 
-    <div class="container hidden" id="game-area">
+    <div class="game-wrapper hidden" id="game-area">
         <div id="game-container">
-            <div id="game-display"></div>
-            <div class="controls">
-                <button onclick="game.move(-1,-1)">↖</button>
-                <button onclick="game.move(0,-1)">↑</button>
-                <button onclick="game.move(1,-1)">↗</button>
-                <button onclick="game.move(-1,0)">←</button>
-                <button onclick="game.wait()">•</button>
-                <button onclick="game.move(1,0)">→</button>
-                <button onclick="game.move(-1,1)">↙</button>
-                <button onclick="game.move(0,1)">↓</button>
-                <button onclick="game.move(1,1)">↘</button>
-            </div>
-            <p class="help-text">WASD/Стрелки - движение | SPACE - ждать | 1-5 - магия | G - подобрать | > - спуск</p>
+            <canvas id="game-canvas"></canvas>
         </div>
 
         <div class="sidebar">
             <div class="panel" id="stats-panel">
                 <h2>Персонаж</h2>
                 <div id="player-stats"></div>
+                <div class="controls-mini">
+                    <button onclick="game.move(-1,-1)">↖</button>
+                    <button onclick="game.move(0,-1)">↑</button>
+                    <button onclick="game.move(1,-1)">↗</button>
+                    <button onclick="game.move(-1,0)">←</button>
+                    <button onclick="game.wait()">•</button>
+                    <button onclick="game.move(1,0)">→</button>
+                    <button onclick="game.move(-1,1)">↙</button>
+                    <button onclick="game.move(0,1)">↓</button>
+                    <button onclick="game.move(1,1)">↘</button>
+                </div>
             </div>
             <div class="panel">
-                <h2>Заклинания (1-5)</h2>
+                <h2>Заклинания (1-6)</h2>
                 <div id="spell-list"></div>
             </div>
             <div class="panel">
@@ -269,6 +285,8 @@
 const MAP_WIDTH = 60;
 const MAP_HEIGHT = 25;
 const FOV_RADIUS = 8;
+const BASE_TILE_SIZE = 16; // Базовый размер тайла
+let TILE_SIZE = BASE_TILE_SIZE; // Текущий размер (масштабируется)
 
 const TILES = {
     wall: '█', floor: '·', stairs_down: '>', stairs_up: '<',
@@ -619,9 +637,11 @@ class Game {
         document.getElementById('game-area').classList.remove('hidden');
 
         this.addLog(`Вы - ${cls.name}. Добро пожаловать в пустошь!`);
-        this.addLog('WASD - движение, SPACE - ждать, 1-5 - магия, G - подобрать');
+        this.addLog('WASD - движение, 1-6 - магия, G - подобрать');
         this.state = 'playing';
-        this.render();
+
+        // Инициализация канваса с задержкой для корректного размера
+        setTimeout(() => this.resizeCanvas(), 50);
     }
 
     generateMap() {
@@ -2180,46 +2200,269 @@ class Game {
             !(x === this.player.x && y === this.player.y);
     }
 
-    render() {
-        // Карта
-        const display = document.getElementById('game-display');
-        let html = '';
+    // Масштабирование канваса под размер контейнера
+    resizeCanvas() {
+        const container = document.getElementById('game-container');
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
 
+        const maxWidth = container.clientWidth - 10;
+        const maxHeight = container.clientHeight - 10;
+
+        // Вычисляем оптимальный размер тайла
+        const tileW = Math.floor(maxWidth / MAP_WIDTH);
+        const tileH = Math.floor(maxHeight / MAP_HEIGHT);
+        TILE_SIZE = Math.max(8, Math.min(tileW, tileH, 32));
+
+        canvas.width = MAP_WIDTH * TILE_SIZE;
+        canvas.height = MAP_HEIGHT * TILE_SIZE;
+
+        this.ctx = ctx;
+        this.render();
+    }
+
+    render() {
+        const canvas = document.getElementById('game-canvas');
+        const ctx = this.ctx || canvas.getContext('2d');
+
+        // Очистка
+        ctx.fillStyle = '#0a0a0f';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const T = TILE_SIZE;
+
+        // Отрисовка карты
         for (let y = 0; y < MAP_HEIGHT; y++) {
             for (let x = 0; x < MAP_WIDTH; x++) {
                 const tile = this.map[x][y];
+                const px = x * T;
+                const py = y * T;
 
                 // Курсор при таргетинге
                 if (this.targeting && x === this.targetX && y === this.targetY) {
-                    html += `<span style="color:#ffff00;background:#444">X</span>`;
+                    ctx.fillStyle = '#ffff00';
+                    ctx.fillRect(px, py, T, T);
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(px + 2, py + 2, T - 4, T - 4);
                     continue;
                 }
 
-                if (x === this.player.x && y === this.player.y) {
-                    html += `<span style="color:${this.player.color}">@</span>`;
-                } else if (tile.visible) {
-                    const entity = this.getEntityAt(x, y);
-                    if (entity) {
-                        html += `<span style="color:${entity.color}">${entity.symbol}</span>`;
-                    } else {
-                        const items = this.getItemsAt(x, y);
-                        if (items.length > 0) {
-                            html += `<span style="color:${items[0].color}">${items[0].symbol}</span>`;
-                        } else {
-                            html += `<span style="color:${tile.color}">${tile.symbol}</span>`;
+                if (tile.visible) {
+                    this.drawTile(ctx, tile, px, py, T, 1.0);
+
+                    // Ловушки
+                    if (this.traps) {
+                        const trap = this.traps.find(t => t.x === x && t.y === y);
+                        if (trap) {
+                            ctx.fillStyle = '#ff4400';
+                            ctx.beginPath();
+                            ctx.moveTo(px + T/2, py + 2);
+                            ctx.lineTo(px + T - 2, py + T - 2);
+                            ctx.lineTo(px + 2, py + T - 2);
+                            ctx.fill();
                         }
                     }
                 } else if (tile.explored) {
-                    html += `<span style="color:#222">${tile.symbol}</span>`;
-                } else {
-                    html += ' ';
+                    this.drawTile(ctx, tile, px, py, T, 0.2);
                 }
+                // Неисследованное - оставляем чёрным
             }
-            html += '\n';
         }
 
-        display.innerHTML = html;
+        // Отрисовка предметов
+        for (const item of this.items) {
+            if (this.map[item.x][item.y].visible) {
+                this.drawItem(ctx, item, item.x * T, item.y * T, T);
+            }
+        }
 
+        // Отрисовка врагов
+        for (const entity of this.entities) {
+            if (this.map[entity.x][entity.y].visible) {
+                this.drawEntity(ctx, entity, entity.x * T, entity.y * T, T);
+            }
+        }
+
+        // Отрисовка игрока
+        this.drawPlayer(ctx, this.player.x * T, this.player.y * T, T);
+
+        // UI статистика
+        this.renderUI();
+    }
+
+    drawTile(ctx, tile, px, py, T, alpha) {
+        ctx.globalAlpha = alpha;
+
+        if (!tile.walkable) {
+            // Стена
+            ctx.fillStyle = '#3a3a4a';
+            ctx.fillRect(px, py, T, T);
+            ctx.fillStyle = '#2a2a3a';
+            ctx.fillRect(px + 1, py + 1, T - 2, T/2 - 1);
+            ctx.fillStyle = '#4a4a5a';
+            ctx.fillRect(px, py, T, 2);
+        } else if (tile.symbol === '>') {
+            // Лестница вниз
+            ctx.fillStyle = '#1a1a2a';
+            ctx.fillRect(px, py, T, T);
+            ctx.fillStyle = '#ffaa00';
+            for (let i = 0; i < 3; i++) {
+                ctx.fillRect(px + 2, py + 3 + i * 4, T - 4, 2);
+            }
+        } else if (tile.symbol === '☢') {
+            // Радиация
+            ctx.fillStyle = '#1a2a1a';
+            ctx.fillRect(px, py, T, T);
+            ctx.fillStyle = '#44ff44';
+            ctx.beginPath();
+            ctx.arc(px + T/2, py + T/2, T/4, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (tile.symbol === '~') {
+            // Вода
+            ctx.fillStyle = '#1a2a3a';
+            ctx.fillRect(px, py, T, T);
+            ctx.fillStyle = '#3355aa';
+            ctx.fillRect(px + 2, py + T/2, T - 4, 2);
+        } else {
+            // Пол
+            ctx.fillStyle = '#1a1a2a';
+            ctx.fillRect(px, py, T, T);
+            // Текстура пола
+            ctx.fillStyle = '#252535';
+            if ((px + py) % (T * 2) < T) {
+                ctx.fillRect(px + T/4, py + T/4, 2, 2);
+            }
+        }
+
+        ctx.globalAlpha = 1.0;
+    }
+
+    drawEntity(ctx, entity, px, py, T) {
+        const color = entity.color || '#ff4444';
+
+        // Тело врага
+        ctx.fillStyle = color;
+
+        if (entity.symbol === 'D' || entity.symbol === 'S') {
+            // Большие враги (когти смерти, стражи)
+            ctx.fillRect(px + 2, py + 2, T - 4, T - 4);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(px + 4, py + 4, 3, 3);
+            ctx.fillRect(px + T - 7, py + 4, 3, 3);
+        } else if (entity.symbol === 'd' || entity.symbol === 'u') {
+            // Собаки/бегуны - на четвереньках
+            ctx.fillRect(px + 2, py + T/2, T - 4, T/3);
+            ctx.fillRect(px + T - 6, py + T/3, 4, T/3);
+        } else if (entity.symbol === 'R' || entity.symbol === 'B') {
+            // Роботы - квадратные
+            ctx.fillRect(px + 3, py + 3, T - 6, T - 6);
+            ctx.fillStyle = '#00ffff';
+            ctx.fillRect(px + 5, py + 5, 3, 2);
+            ctx.fillRect(px + T - 8, py + 5, 3, 2);
+        } else {
+            // Гуманоиды
+            ctx.beginPath();
+            ctx.arc(px + T/2, py + T/3, T/4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(px + T/3, py + T/2, T/3, T/2 - 2);
+        }
+
+        // Индикатор контроля
+        if (entity.controlled) {
+            ctx.strokeStyle = '#aa44ff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(px + 1, py + 1, T - 2, T - 2);
+        }
+
+        // Индикатор горения
+        if (entity.burning) {
+            ctx.fillStyle = '#ff4400';
+            ctx.beginPath();
+            ctx.moveTo(px + T/2, py);
+            ctx.lineTo(px + T/2 + 3, py + 5);
+            ctx.lineTo(px + T/2 - 3, py + 5);
+            ctx.fill();
+        }
+    }
+
+    drawPlayer(ctx, px, py, T) {
+        const color = this.player.color || '#ffff00';
+
+        // Круг персонажа
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(px + T/2, py + T/3, T/4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Тело
+        ctx.fillRect(px + T/3, py + T/2, T/3, T/2 - 2);
+
+        // Щит
+        if (this.player.shield > 0) {
+            ctx.strokeStyle = '#44aaff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(px + T/2, py + T/2, T/2 - 2, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Огненная аура
+        if (this.player.fireAura > 0) {
+            ctx.strokeStyle = '#ff4400';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([2, 2]);
+            ctx.beginPath();
+            ctx.arc(px + T/2, py + T/2, T/2 + 2, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // Невидимость
+        if (this.player.stealth > 0) {
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(px, py, T, T);
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    drawItem(ctx, item, px, py, T) {
+        const color = item.color || '#ffff00';
+        ctx.fillStyle = color;
+
+        if (item.type === 'weapon') {
+            // Меч/оружие
+            ctx.fillRect(px + T/2 - 1, py + 2, 2, T - 4);
+            ctx.fillRect(px + T/4, py + T/3, T/2, 2);
+        } else if (item.type === 'armor') {
+            // Броня
+            ctx.fillRect(px + T/4, py + T/4, T/2, T/2);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(px + T/3, py + T/3, T/3, T/3);
+        } else if (item.type === 'grenade') {
+            // Граната
+            ctx.beginPath();
+            ctx.arc(px + T/2, py + T/2, T/3, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (item.symbol === '!') {
+            // Зелье/расходник
+            ctx.fillRect(px + T/3, py + T/4, T/3, T/2);
+            ctx.fillRect(px + T/4, py + T/4, T/2, T/6);
+        } else if (item.symbol === '&') {
+            // Артефакт - звезда
+            ctx.beginPath();
+            ctx.moveTo(px + T/2, py + 2);
+            ctx.lineTo(px + T/2 + 4, py + T/2);
+            ctx.lineTo(px + T/2, py + T - 2);
+            ctx.lineTo(px + T/2 - 4, py + T/2);
+            ctx.fill();
+        } else {
+            // Общий предмет
+            ctx.fillRect(px + T/4, py + T/4, T/2, T/2);
+        }
+    }
+
+    renderUI() {
         // Статистика
         const hpPct = (this.player.hp / this.player.maxHp) * 100;
         const manaPct = (this.player.mana / this.player.maxMana) * 100;
@@ -2229,17 +2472,24 @@ class Game {
         let weaponDmg = this.player.damage + Math.floor(this.player.str / 2);
         if (this.player.equipped.weapon) weaponDmg += this.player.equipped.weapon.damage;
 
+        let buffs = [];
+        if (this.player.shield > 0) buffs.push(`🛡${this.player.shield}`);
+        if (this.player.fireAura > 0) buffs.push(`🔥${this.player.fireAura}`);
+        if (this.player.stealth > 0) buffs.push(`👁${this.player.stealth}`);
+        if (this.player.foresight > 0) buffs.push(`⏱${this.player.foresight}`);
+        if (this.player.droneActive > 0) buffs.push(`📡${this.player.droneActive}`);
+        if (this.player.phoenixBuff) buffs.push(`🔥ФНК`);
+
         document.getElementById('player-stats').innerHTML = `
-            <p><strong>${this.player.className}</strong> Ур.${this.player.level}</p>
-            <p>Этаж: ${this.depth}</p>
+            <p><strong>${this.player.className}</strong> Ур.${this.player.level} | Этаж: ${this.depth}</p>
             <div class="stat-label"><span>HP</span><span>${this.player.hp}/${this.player.maxHp}</span></div>
             <div class="bar"><div class="bar-fill hp-bar" style="width:${hpPct}%"></div></div>
             <div class="stat-label"><span>Мана</span><span>${this.player.mana}/${this.player.maxMana}</span></div>
             <div class="bar"><div class="bar-fill mana-bar" style="width:${manaPct}%"></div></div>
             <div class="stat-label"><span>Опыт</span><span>${this.player.xp}/${xpNeeded}</span></div>
             <div class="bar"><div class="bar-fill xp-bar" style="width:${xpPct}%"></div></div>
-            <p style="margin-top:8px;font-size:11px">СИЛ:${this.player.str} ЛОВ:${this.player.agi} ИНТ:${this.player.int} ВЫН:${this.player.end}</p>
-            <p style="font-size:11px">Броня:${this.player.armor} Урон:${weaponDmg}</p>
+            <p style="margin-top:4px;font-size:10px">СИЛ:${this.player.str} ЛОВ:${this.player.agi} ИНТ:${this.player.int} | Брн:${this.player.armor} Урн:${weaponDmg}</p>
+            ${buffs.length ? `<p style="font-size:10px;color:#ffaa00">${buffs.join(' ')}</p>` : ''}
         `;
 
         // Заклинания
@@ -2249,36 +2499,26 @@ class Game {
             const cdClass = spell.currentCooldown > 0 ? 'cooldown' : '';
             spellHtml += `<div class="spell ${cdClass}" onclick="game.castSpell(${i})">
                 <strong>${i+1}. ${spell.name}</strong>${cd}<br>
-                <small>Мана:${spell.cost} Урон:${spell.damage} Дальн:${spell.range}</small>
+                <small>М:${spell.cost} У:${spell.damage || '-'} Д:${spell.range}</small>
             </div>`;
         });
-        document.getElementById('spell-list').innerHTML = spellHtml || '<p style="color:#666">Нет заклинаний</p>';
+        document.getElementById('spell-list').innerHTML = spellHtml || '<p style="color:#666">Нет</p>';
 
-        // Инвентарь
+        // Инвентарь (компактный)
         let invHtml = '';
-        this.player.inventory.forEach((item, i) => {
+        this.player.inventory.slice(0, 8).forEach((item, i) => {
             const eqClass = item.equipped ? 'equipped' : (item.active ? 'equipped' : '');
             const rarityColor = RARITY[item.rarity]?.color || '#aaa';
-            let stats = '';
-            if (item.type === 'weapon') stats = `Урон: ${item.damage}`;
-            else if (item.type === 'armor') stats = `Броня: ${item.armor}`;
-            else if (item.type === 'grenade') stats = `Урон: ${item.damage} (R:${item.area})`;
-            else if (item.heal) stats = `Лечение: ${item.heal}`;
-            else if (item.manaRestore) stats = `Мана: +${item.manaRestore}`;
-
-            const mods = item.mods?.map(m => m.desc).join(', ') || '';
-
-            invHtml += `<div class="item ${eqClass}" onclick="game.useItem(${i})" title="${item.desc || ''}${mods ? '\n' + mods : ''}">
-                <span style="color:${item.color}">${item.symbol}</span>
+            invHtml += `<div class="item ${eqClass}" onclick="game.useItem(${i})" style="padding:3px;font-size:10px">
                 <span style="color:${rarityColor}">${item.name}</span>
-                ${stats ? `<br><small style="color:#888">${stats}</small>` : ''}
             </div>`;
         });
+        if (this.player.inventory.length > 8) invHtml += `<p style="color:#666;font-size:10px">+${this.player.inventory.length - 8} ещё...</p>`;
         document.getElementById('inventory-list').innerHTML = invHtml || '<p style="color:#666">Пусто</p>';
 
         // Лог
         const logEl = document.getElementById('log-display');
-        logEl.innerHTML = this.log.slice(-10).map(m => `<p>${m}</p>`).join('');
+        logEl.innerHTML = this.log.slice(-8).map(m => `<p>${m}</p>`).join('');
         logEl.scrollTop = logEl.scrollHeight;
     }
 
@@ -2335,6 +2575,13 @@ class Game {
 
 // Запуск
 const game = new Game();
+
+// Обработка изменения размера окна
+window.addEventListener('resize', () => {
+    if (game.state === 'playing') {
+        game.resizeCanvas();
+    }
+});
 </script>
 </body>
 </html>
